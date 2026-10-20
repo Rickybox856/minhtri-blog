@@ -1,0 +1,4 @@
+# Header cho file tĩnh (Cloudflare static assets)
+# CSS được gắn ?v=<mã bản deploy> nên cache lâu dài được; deploy mới là đổi link
+/css/*
+  Cache-Control: public, max-age=31536000, immutable

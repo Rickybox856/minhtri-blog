@@ -1,0 +1,39 @@
+{
+  "name": "minhtri-blog",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler d1 migrations apply DB --remote && wrangler deploy --minify",
+    "typecheck": "tsc --noEmit",
+    "cf-typegen": "wrangler types --env-interface CloudflareBindings",
+    "db:migrate:local": "wrangler d1 migrations apply DB --local",
+    "db:migrate:remote": "wrangler d1 migrations apply DB --remote",
+    "db:seed:local": "wrangler d1 execute DB --local --file=./db/seed.sql",
+    "post:local": "node scripts/publish-post.mjs",
+    "post:publish": "node scripts/publish-post.mjs --remote",
+    "admin:password": "node scripts/set-admin-password.mjs",
+    "template:export": "node scripts/export-template.mjs"
+  },
+  "dependencies": {
+    "hono": "^4.13.13",
+    "marked": "^18.1.1"
+  },
+  "devDependencies": {
+    "typescript": "^7.0.2",
+    "wrangler": "^4.151.1"
+  },
+  "description": "Blog tiếng Việt chạy miễn phí trên Cloudflare Workers (Hono, D1, R2)",
+  "repository": "github:nhakhtn/minhtri-blog-cloudflare",
+  "cloudflare": {
+    "bindings": {
+      "SETUP_TOKEN": {
+        "description": "Mã cài đặt: dùng một lần để đặt mật khẩu quản trị khi mở `/quan-tri` lần đầu. Chọn chuỗi khó đoán và **ghi nhớ lại**."
+      },
+      "SITE_NAME": {
+        "description": "Tên blog (đổi được sau trong Quản trị → Cài đặt site)."
+      }
+    }
+  }
+}

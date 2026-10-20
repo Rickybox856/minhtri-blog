@@ -1,0 +1,3 @@
+# Mã cài đặt: dùng MỘT LẦN để đặt mật khẩu quản trị khi vào /quan-tri lần đầu.
+# Nút "Deploy to Cloudflare" sẽ hỏi giá trị này; chọn chuỗi khó đoán và ghi nhớ lại.
+SETUP_TOKEN="dat-mot-ma-kho-doan"
