@@ -29,7 +29,7 @@ export const PostGrid = ({ posts }: { posts: Post[] }) =>
       ))}
     </div>
   ) : (
-    <p class="empty">Bài viết đang được biên soạn, mời bạn quay lại sau.</p>
+    <p class="empty">記事は準備中です。またのお越しをお待ちしています。</p>
   )
 
 // Thẻ lớn nằm ngang cho bài nổi bật ở trang chủ
@@ -49,7 +49,7 @@ export const FeaturedPost = ({ post }: { post: Post }) => (
       </h3>
       <p>{post.excerpt}</p>
       <a class="read-more" href={`/bai-viet/${post.slug}`}>
-        Đọc bài viết ›
+        続きを読む ›
       </a>
     </div>
   </article>
@@ -72,7 +72,7 @@ export const PostList = ({ posts }: { posts: Post[] }) =>
       ))}
     </ul>
   ) : (
-    <p class="empty">Bài viết đang được biên soạn.</p>
+    <p class="empty">記事は準備中です。</p>
   )
 
 const productImage =(p: Product) => (p.image_key ? mediaUrl(p.image_key) : p.image_url)
@@ -85,10 +85,10 @@ export const ProductCard = ({ product, shop }: { product: Product; shop?: string
       <h3>{product.name}</h3>
       <p>{product.summary}</p>
       <strong class="price">{formatPrice(product.price)}</strong>
-      {product.buy_url && product.price != null && <small class="price-note">Giá tham khảo, có thể thay đổi{shop ? ` trên ${shop}` : ''}</small>}
+      {product.buy_url && product.price != null && <small class="price-note">参考価格です。{shop ? `${shop}での` : ''}価格は変動する場合があります。</small>}
       {product.buy_url && (
         <a class="btn btn-shopee" href={`/mua/${product.slug}`} target="_blank" rel="sponsored nofollow noopener">
-          {shop ? `Mua trên ${shop}` : 'Mua ngay'}
+          {shop ? `${shop}で購入` : '購入する'}
         </a>
       )}
     </article>

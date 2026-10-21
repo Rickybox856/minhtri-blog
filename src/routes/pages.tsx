@@ -8,7 +8,7 @@ import type { AppEnv } from '../types'
 const app = new Hono<AppEnv>()
 
 const affiliateNote = (shop: string) =>
-  `Một số liên kết trên trang là liên kết tiếp thị${shop ? ` ${shop}` : ''}: khi bạn mua qua liên kết này, chúng tôi có thể nhận hoa hồng mà giá bạn trả không thay đổi.`
+  `当ページには${shop ? `${shop}の` : ''}アフィリエイトリンクが含まれます。リンク経由でご購入いただくと当サイトに紹介料が入る場合がありますが、お客様のお支払い金額は変わりません。`
 
 app.get('/', async (c) => {
   const categories = c.get('nav').postCategories
@@ -31,12 +31,12 @@ app.get('/', async (c) => {
           <div class="hero-actions">
             {first && (
               <a class="btn" href={`/chu-de/${first.slug}`}>
-                Tìm hiểu {first.name.toLowerCase()}
+                {first.name}を見る
               </a>
             )}
             {second && (
               <a class="btn btn-outline" href={`/chu-de/${second.slug}`}>
-                Tìm hiểu {second.name.toLowerCase()}
+                {second.name}を見る
               </a>
             )}
           </div>
@@ -51,7 +51,7 @@ app.get('/', async (c) => {
       {featured && (
         <section>
           <div class="section-head">
-            <h2>Bài mới nhất</h2>
+            <h2>最新記事</h2>
           </div>
           <FeaturedPost post={featured} />
         </section>
@@ -62,7 +62,7 @@ app.get('/', async (c) => {
           <div class="topic-column">
             <div class="section-head">
               <h2>{cat.name}</h2>
-              <a href={`/chu-de/${cat.slug}`}>Xem tất cả ›</a>
+              <a href={`/chu-de/${cat.slug}`}>すべて見る ›</a>
             </div>
             <PostList posts={byCategory[i]} />
           </div>
@@ -72,8 +72,8 @@ app.get('/', async (c) => {
       {productCount > 0 && products.length > 0 && (
         <section>
           <div class="section-head">
-            <h2>Sản phẩm</h2>
-            <a href="/san-pham">Xem tất cả ›</a>
+            <h2>商品</h2>
+            <a href="/san-pham">すべて見る ›</a>
           </div>
           <ProductGrid products={products.slice(0, productCount)} shop={site.shop_name} />
         </section>
@@ -91,12 +91,12 @@ app.get('/san-pham', async (c) => {
   const known = new Set(categories.map((cat) => cat.slug))
   const groups = [
     ...categories.map((cat) => ({ name: cat.name, items: products.filter((p) => p.category === cat.slug) })),
-    { name: 'Khác', items: products.filter((p) => !known.has(p.category)) },
+    { name: 'その他', items: products.filter((p) => !known.has(p.category)) },
   ].filter((g) => g.items.length)
 
   return c.render(
     <>
-      <h1>Sản phẩm</h1>
+      <h1>商品</h1>
       {site.products_intro && <p class="lead">{site.products_intro}</p>}
       {groups.length ? (
         groups.map((g) => (
@@ -106,16 +106,16 @@ app.get('/san-pham', async (c) => {
           </section>
         ))
       ) : (
-        <p class="empty">Sản phẩm đang được cập nhật.</p>
+        <p class="empty">商品は準備中です。</p>
       )}
       <p class="disclosure">{affiliateNote(site.shop_name)}</p>
     </>,
     {
-      title: 'Sản phẩm',
-      description: site.products_intro || `Sản phẩm trên ${site.name}.`,
+      title: '商品',
+      description: site.products_intro || `${site.name}の商品一覧です。`,
       breadcrumbs: [
-        { name: 'Trang chủ', path: '/' },
-        { name: 'Sản phẩm', path: '/san-pham' },
+        { name: 'ホーム', path: '/' },
+        { name: '商品', path: '/san-pham' },
       ],
     }
   )

@@ -14,15 +14,15 @@ app.get('/', async (c) => {
   const posts = await listPosts(c.env.DB, 100)
   return c.render(
     <>
-      <h1>Tất cả bài viết</h1>
+      <h1>記事一覧</h1>
       <PostGrid posts={posts} />
     </>,
     {
-      title: 'Bài viết',
-      description: `Tất cả bài viết trên ${c.get('site').name}.`,
+      title: '記事一覧',
+      description: `${c.get('site').name}の記事一覧です。`,
       breadcrumbs: [
-        { name: 'Trang chủ', path: '/' },
-        { name: 'Bài viết', path: '/bai-viet' },
+        { name: 'ホーム', path: '/' },
+        { name: '記事一覧', path: '/bai-viet' },
       ],
     }
   )
@@ -56,14 +56,14 @@ app.get('/:slug', async (c) => {
           <h1>{post.title}</h1>
           <p class="post-meta">
             {post.author && post.author !== c.get('site').owner_name ? (
-              <>Tác giả: {post.author} · </>
+              <>著者: {post.author} · </>
             ) : c.get('site').owner_name ? (
               <>
-                Tác giả: <a href="/gioi-thieu#tac-gia">{c.get('site').owner_name}</a> ·{' '}
+                著者: <a href="/gioi-thieu#tac-gia">{c.get('site').owner_name}</a> ·{' '}
               </>
             ) : null}
-            Đăng ngày <time datetime={post.published_at ?? undefined}>{formatDate(post.published_at)}</time>
-            {updated && <> · Cập nhật {formatDate(post.updated_at)}</>}
+            公開日 <time datetime={post.published_at ?? undefined}>{formatDate(post.published_at)}</time>
+            {updated && <> · 更新日 {formatDate(post.updated_at)}</>}
           </p>
         </header>
         <div class="prose">{raw(withMediaBase(html))}</div>
@@ -71,14 +71,14 @@ app.get('/:slug', async (c) => {
 
       {products.length > 0 && (
         <section class="related">
-          <h2>Sản phẩm liên quan</h2>
+          <h2>関連商品</h2>
           <ProductGrid products={products} shop={c.get('site').shop_name} />
         </section>
       )}
 
       {related.filter((p) => p.slug !== post.slug).length > 0 && (
         <section class="related">
-          <h2>Bài viết cùng chủ đề</h2>
+          <h2>同じテーマの記事</h2>
           <PostGrid posts={related.filter((p) => p.slug !== post.slug).slice(0, 3)} />
         </section>
       )}
@@ -91,7 +91,7 @@ app.get('/:slug', async (c) => {
       image: post.cover_key ? mediaUrl(post.cover_key) : undefined,
       jsonLd: [articleJsonLd(siteOrigin(c), post, c.get('site'))],
       breadcrumbs: [
-        { name: 'Trang chủ', path: '/' },
+        { name: 'ホーム', path: '/' },
         ...(post.category_name ? [{ name: post.category_name, path: `/chu-de/${post.category}` }] : []),
         { name: post.title, path: `/bai-viet/${post.slug}` },
       ],

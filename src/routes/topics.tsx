@@ -20,7 +20,7 @@ app.get('/:slug', async (c) => {
       title: category.name,
       description: category.description || undefined,
       breadcrumbs: [
-        { name: 'Trang chủ', path: '/' },
+        { name: 'ホーム', path: '/' },
         { name: category.name, path: `/chu-de/${category.slug}` },
       ],
     }

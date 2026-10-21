@@ -6,7 +6,8 @@ import type { AppEnv } from '../types'
 
 const app = new Hono<AppEnv>()
 
-const PHONE_RE = /^(\+?84|0)\d{9,10}$/
+// Chấp nhận số Nhật (09012345678), số Việt Nam và số quốc tế có dấu +
+const PHONE_RE = /^(\+\d{1,3}|0)\d{9,10}$/
 
 app.get('/', (c) => {
   const site = c.get('site')
@@ -14,18 +15,18 @@ app.get('/', (c) => {
   const error = c.req.query('error') === '1'
   return c.render(
     <>
-      <h1>Liên hệ</h1>
+      <h1>お問い合わせ</h1>
       {site.contact_intro_html && <div class="prose">{raw(site.contact_intro_html)}</div>}
       <ul class="contact-list">
         {site.phone && (
           <li>
-            Điện thoại{site.zalo === '1' && ' / Zalo'}: <a href={`tel:${phoneIntl(site.phone)}`}>{phoneDisplay(site.phone)}</a>
+            電話{site.zalo === '1' && ' / Zalo'}: <a href={`tel:${phoneIntl(site.phone)}`}>{phoneDisplay(site.phone)}</a>
             {site.zalo === '1' && (
               <>
                 {' '}
                 ·{' '}
                 <a href={zaloUrl(site.phone)} target="_blank" rel="noopener">
-                  Nhắn Zalo
+                  Zaloでメッセージ
                 </a>
               </>
             )}
@@ -33,7 +34,7 @@ app.get('/', (c) => {
         )}
         {site.email && (
           <li>
-            Email: <a href={`mailto:${site.email}`}>{site.email}</a>
+            メール: <a href={`mailto:${site.email}`}>{site.email}</a>
           </li>
         )}
         {site.facebook && (
@@ -44,42 +45,42 @@ app.get('/', (c) => {
             </a>
           </li>
         )}
-        {site.address && <li>Địa chỉ: {site.address}</li>}
+        {site.address && <li>住所: {site.address}</li>}
       </ul>
       {site.contact_form === '1' && (
         <>
-      <p>Hoặc để lại lời nhắn, chúng tôi sẽ gọi lại cho bạn:</p>
-      {ok && <p class="notice success">Cảm ơn bạn! Chúng tôi sẽ liên hệ lại sớm.</p>}
-      {error && <p class="notice error">Vui lòng nhập họ tên và số điện thoại hợp lệ.</p>}
+      <p>または、以下のフォームからメッセージをお送りください。折り返しご連絡いたします。</p>
+      {ok && <p class="notice success">お問い合わせありがとうございます。折り返しご連絡いたします。</p>}
+      {error && <p class="notice error">お名前と正しい電話番号を入力してください。</p>}
       <form method="post" action="/lien-he" class="form">
         <label>
-          Họ tên
+          お名前
           <input name="name" required maxlength={100} />
         </label>
         <label>
-          Số điện thoại
+          電話番号
           <input name="phone" type="tel" required maxlength={15} />
         </label>
         <label>
-          Nội dung
+          お問い合わせ内容
           <textarea name="message" rows={5} maxlength={2000} />
         </label>
         <button class="btn" type="submit">
-          Gửi
+          送信
         </button>
       </form>
         </>
       )}
     </>,
     {
-      title: 'Liên hệ',
+      title: 'お問い合わせ',
       description:
-        [`Liên hệ ${site.name}`, site.phone && `điện thoại ${phoneDisplay(site.phone)}`, site.email && `email ${site.email}`]
+        [`${site.name}へのお問い合わせ`, site.phone && `電話 ${phoneDisplay(site.phone)}`, site.email && `メール ${site.email}`]
           .filter(Boolean)
-          .join(', ') + '.',
+          .join('、') + '。',
       breadcrumbs: [
-        { name: 'Trang chủ', path: '/' },
-        { name: 'Liên hệ', path: '/lien-he' },
+        { name: 'ホーム', path: '/' },
+        { name: 'お問い合わせ', path: '/lien-he' },
       ],
     }
   )

@@ -32,11 +32,11 @@ type Props = SeoProps & {
 
 // Menu: Trang chủ, các chuyên mục bài viết, Sản phẩm, các trang tĩnh bật "hiện ở menu", Liên hệ
 const menuItems = (nav: SiteNav, site: SiteConfig) => [
-  { href: '/', label: 'Home' },
+  { href: '/', label: 'ホーム' },
   ...nav.postCategories.map((c) => ({ href: `/chu-de/${c.slug}`, label: c.name })),
-  ...(productsEnabled(site) ? [{ href: '/san-pham', label: 'Sản phẩm' }] : []),
+  ...(productsEnabled(site) ? [{ href: '/san-pham', label: '商品' }] : []),
   ...nav.pages.filter((p) => p.show_in_menu).map((p) => ({ href: `/${p.slug}`, label: p.title })),
-  { href: '/lien-he', label: 'Liên hệ' },
+  { href: '/lien-he', label: 'お問い合わせ' },
 ]
 
 
@@ -65,11 +65,13 @@ export const Layout = (props: Props) => {
   const icon = faviconUrl(site)
   const fullTitle = title ? `${title} | ${siteName}` : siteName
   const canonical = new URL(path, siteUrl).toString()
+  // Trang công khai tiếng Nhật; trang quản trị vẫn tiếng Việt
+  const isAdmin = path.startsWith('/quan-tri')
   const shareImage = props.image ?? (site.hero_image_key ? mediaUrl(site.hero_image_key) : undefined)
   const image = shareImage && new URL(shareImage, siteUrl).toString()
 
   return (
-    <html lang="vi">
+    <html lang={isAdmin ? 'vi' : 'ja'}>
       <head>
         <meta charset="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -82,7 +84,7 @@ export const Layout = (props: Props) => {
         <meta name="theme-color" content="#c98a12" />
 
         <meta property="og:site_name" content={siteName} />
-        <meta property="og:locale" content="vi_VN" />
+        <meta property="og:locale" content="ja_JP" />
         <meta property="og:type" content={props.type ?? 'website'} />
         <meta property="og:title" content={title ?? siteName} />
         {description && <meta property="og:description" content={description} />}
@@ -101,7 +103,7 @@ export const Layout = (props: Props) => {
               <img src={icon} alt="" width="34" height="34" />
               {siteName}
             </a>
-            <nav class="main-nav" aria-label="Menu chính">
+            <nav class="main-nav" aria-label="メインメニュー">
               {menuItems(props.nav, site).map((item) => {
                 const active =
                   item.href === props.section || (item.href === '/' ? path === '/' : path.startsWith(item.href))
@@ -127,7 +129,7 @@ export const Layout = (props: Props) => {
               <p>
                 {site.phone && (
                   <>
-                    Điện thoại{site.zalo === '1' && ' / Zalo'}: <a href={`tel:${phoneIntl(site.phone)}`}>{phoneDisplay(site.phone)}</a>
+                    電話{site.zalo === '1' && ' / Zalo'}: <a href={`tel:${phoneIntl(site.phone)}`}>{phoneDisplay(site.phone)}</a>
                     <br />
                   </>
                 )}
@@ -140,16 +142,19 @@ export const Layout = (props: Props) => {
               )}
             </div>
             <div class="footer-links">
-              <a href="/bai-viet">Tất cả bài viết</a>
+              <a href="/bai-viet">記事一覧</a>
               {props.nav.pages
                 .filter((p) => p.show_in_footer)
                 .map((p) => (
                   <a href={`/${p.slug}`}>{p.title}</a>
                 ))}
-              <a href="/lien-he">Liên hệ</a>
+              <a href="/lien-he">お問い合わせ</a>
             </div>
           </div>
           <div class="container copyright">
+            <p class="unofficial-note">
+              当サイトは株式会社ニッポン放送の公式サイトではなく、同社とは関係ありません。
+            </p>
             {copyrightText(site)}
           </div>
         </footer>

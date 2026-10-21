@@ -116,12 +116,12 @@ app.notFound((c) => {
   c.status(404)
   return c.render(
     <>
-      <h1>Không tìm thấy trang</h1>
+      <h1>ページが見つかりません</h1>
       <p>
-        <a href="/">Về trang chủ</a>
+        <a href="/">ホームに戻る</a>
       </p>
     </>,
-    { title: 'Không tìm thấy', noindex: true }
+    { title: 'ページが見つかりません', noindex: true }
   )
 })
 

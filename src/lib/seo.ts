@@ -40,7 +40,7 @@ export const organizationJsonLd = (siteUrl: string, site: SiteConfig, logo: stri
           contactType: 'customer support',
           telephone: phoneIntl(site.phone) || undefined,
           email: site.email || undefined,
-          availableLanguage: 'vi',
+          availableLanguage: 'ja',
         }
       : undefined,
 })
@@ -51,7 +51,7 @@ export const websiteJsonLd = (siteUrl: string, siteName: string) => ({
   '@id': `${siteUrl}/#website`,
   name: siteName,
   url: siteUrl,
-  inLanguage: 'vi',
+  inLanguage: 'ja',
   publisher: { '@id': `${siteUrl}/#organization` },
 })
 
@@ -71,7 +71,7 @@ export const articleJsonLd = (siteUrl: string, post: Post, site: SiteConfig) => 
   '@type': 'Article',
   headline: post.title,
   description: post.excerpt,
-  inLanguage: 'vi',
+  inLanguage: 'ja',
   mainEntityOfPage: absoluteUrl(siteUrl, `/bai-viet/${post.slug}`),
   datePublished: isoDate(post.published_at),
   dateModified: isoDate(post.updated_at),

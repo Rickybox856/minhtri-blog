@@ -29,7 +29,7 @@ app.get('/:slug', async (c, next) => {
       title: page.title,
       description: page.description || undefined,
       breadcrumbs: [
-        { name: 'Trang chủ', path: '/' },
+        { name: 'ホーム', path: '/' },
         { name: page.title, path: `/${page.slug}` },
       ],
     }

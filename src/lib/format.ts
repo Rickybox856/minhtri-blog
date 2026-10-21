@@ -1,11 +1,11 @@
 const vnd = new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' })
 
-export const formatPrice = (price: number | null) => (price == null ? 'Liên hệ' : vnd.format(price))
+export const formatPrice = (price: number | null) => (price == null ? 'お問い合わせ' : vnd.format(price))
 
 // D1 lưu datetime('now') dạng "YYYY-MM-DD HH:MM:SS" theo UTC
 export const formatDate = (value: string | null) =>
   value
-    ? new Date(value.replace(' ', 'T') + 'Z').toLocaleDateString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' })
+    ? new Date(value.replace(' ', 'T') + 'Z').toLocaleDateString('ja-JP', { timeZone: 'Asia/Ho_Chi_Minh' })
     : ''
 
 // Ảnh đi thẳng từ R2 qua tên miền riêng (biến MEDIA_BASE, vd. https://anh.tenmien.com):
