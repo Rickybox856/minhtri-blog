@@ -81,7 +81,7 @@ export const Layout = (props: Props) => {
         <link rel="canonical" href={canonical} />
         <link rel="icon" href={icon} />
         <link rel="apple-touch-icon" href={icon} />
-        <meta name="theme-color" content="#c98a12" />
+        <meta name="theme-color" content="#1f2a52" />
 
         <meta property="og:site_name" content={siteName} />
         <meta property="og:locale" content="ja_JP" />

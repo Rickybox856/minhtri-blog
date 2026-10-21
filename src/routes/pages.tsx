@@ -4,6 +4,8 @@ import { listPosts, listProductCategories, listProducts } from '../lib/db'
 import { mediaUrl } from '../lib/format'
 import { productsEnabled } from '../lib/site-config'
 import type { AppEnv } from '../types'
+import { booksJsonLd } from '../lib/author'
+import { absoluteUrl, siteOrigin } from '../lib/seo'
 
 const app = new Hono<AppEnv>()
 
@@ -113,6 +115,18 @@ app.get('/san-pham', async (c) => {
     {
       title: '商品',
       description: site.products_intro || `${site.name}の商品一覧です。`,
+      jsonLd: products.length
+        ? [
+            booksJsonLd(
+              products.map((p) => ({
+                name: p.name,
+                url: absoluteUrl(siteOrigin(c), '/san-pham'),
+                image: p.image_key ? absoluteUrl(siteOrigin(c), mediaUrl(p.image_key)) : p.image_url || undefined,
+                description: p.summary.split(/\r?\n/).filter(Boolean).slice(0, 2).join(' ') || undefined,
+              }))
+            ),
+          ]
+        : undefined,
       breadcrumbs: [
         { name: 'ホーム', path: '/' },
         { name: '商品', path: '/san-pham' },

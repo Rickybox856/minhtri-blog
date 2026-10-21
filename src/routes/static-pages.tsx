@@ -3,8 +3,11 @@ import { withMediaBase } from '../lib/format'
 import { raw } from 'hono/html'
 import { marked } from 'marked'
 import { getPage } from '../lib/db'
+import { AUTHOR_PAGE_SLUG, authorPageJsonLd } from '../lib/author'
+import { absoluteUrl, siteOrigin } from '../lib/seo'
+import type { AppEnv } from '../types'
 
-const app = new Hono<{ Bindings: CloudflareBindings }>()
+const app = new Hono<AppEnv>()
 
 // Trang tĩnh quản lý trong /quan-tri/trang, phục vụ ở /<slug>.
 // Đăng ký sau cùng để không che các đường dẫn khác.
@@ -28,6 +31,7 @@ app.get('/:slug', async (c, next) => {
     {
       title: page.title,
       description: page.description || undefined,
+      jsonLd: page.slug === AUTHOR_PAGE_SLUG ? [authorPageJsonLd(absoluteUrl(siteOrigin(c), `/${page.slug}`))] : undefined,
       breadcrumbs: [
         { name: 'ホーム', path: '/' },
         { name: page.title, path: `/${page.slug}` },
