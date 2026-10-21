@@ -32,7 +32,7 @@ type Props = SeoProps & {
 
 // Menu: Trang chủ, các chuyên mục bài viết, Sản phẩm, các trang tĩnh bật "hiện ở menu", Liên hệ
 const menuItems = (nav: SiteNav, site: SiteConfig) => [
-  { href: '/', label: 'Trang chủ' },
+  { href: '/', label: 'Home' },
   ...nav.postCategories.map((c) => ({ href: `/chu-de/${c.slug}`, label: c.name })),
   ...(productsEnabled(site) ? [{ href: '/san-pham', label: 'Sản phẩm' }] : []),
   ...nav.pages.filter((p) => p.show_in_menu).map((p) => ({ href: `/${p.slug}`, label: p.title })),
