@@ -2,6 +2,7 @@
 slug: kokoro-no-yasumasekata
 title: つらい時をやり過ごすために『心の休ませ方』
 excerpt: 人生には必ずつらい時がある。だからこそ、その時の心の扱い方をあらかじめ知っておきたい――疲れた心にそっと寄り添う一冊です。
+cover: uploads/2026/10/cover-kokoro-no-yasumasekata.jpg
 category: ghi-chep
 ---
 『心の休ませ方 「つらい時」をやり過ごす心理学』（PHP研究所）は、心が疲れきってしまったときにどう過ごせばよいかを説いた一冊です。単行本のほか、PHP文庫版でも読むことができます。
