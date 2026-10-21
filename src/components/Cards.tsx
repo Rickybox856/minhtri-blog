@@ -1,5 +1,5 @@
 import type { Post, Product } from '../lib/db'
-import { formatDate, formatPrice, mediaUrl } from '../lib/format'
+import { formatPrice, mediaUrl } from '../lib/format'
 
 export const PostCard = ({ post }: { post: Post }) => (
   <article class="post-card">
@@ -16,7 +16,6 @@ export const PostCard = ({ post }: { post: Post }) => (
         <a href={`/bai-viet/${post.slug}`}>{post.title}</a>
       </h3>
       <p>{post.excerpt}</p>
-      <time datetime={post.published_at ?? undefined}>{formatDate(post.published_at)}</time>
     </div>
   </article>
 )
@@ -65,7 +64,6 @@ export const PostList = ({ posts }: { posts: Post[] }) =>
             {p.cover_key ? <img src={mediaUrl(p.cover_key)} alt="" loading="lazy" /> : <span class="thumb-placeholder" />}
             <span>
               <strong>{p.title}</strong>
-              <time datetime={p.published_at ?? undefined}>{formatDate(p.published_at)}</time>
             </span>
           </a>
         </li>

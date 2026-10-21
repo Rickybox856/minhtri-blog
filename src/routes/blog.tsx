@@ -5,7 +5,7 @@ import { PostGrid, ProductGrid } from '../components/Cards'
 import { getPost, listPostProducts, listPosts } from '../lib/db'
 import { productsEnabled } from '../lib/site-config'
 import type { AppEnv } from '../types'
-import { formatDate, mediaUrl, withMediaBase } from '../lib/format'
+import { mediaUrl, withMediaBase } from '../lib/format'
 import { articleJsonLd, siteOrigin } from '../lib/seo'
 
 const app = new Hono<AppEnv>()
@@ -47,24 +47,19 @@ app.get('/:slug', async (c) => {
       c.env.DB.prepare('UPDATE posts SET content_html = ? WHERE id = ?').bind(html, post.id).run()
     )
   }
-  const updated = formatDate(post.updated_at) !== formatDate(post.published_at)
 
   return c.render(
     <>
       <article class="post">
         <header class="post-header">
           <h1>{post.title}</h1>
-          <p class="post-meta">
-            {post.author && post.author !== c.get('site').owner_name ? (
-              <>著者: {post.author} · </>
-            ) : c.get('site').owner_name ? (
-              <>
-                著者: <a href="/gioi-thieu#tac-gia">{c.get('site').owner_name}</a> ·{' '}
-              </>
-            ) : null}
-            公開日 <time datetime={post.published_at ?? undefined}>{formatDate(post.published_at)}</time>
-            {updated && <> · 更新日 {formatDate(post.updated_at)}</>}
-          </p>
+          {post.author && post.author !== c.get('site').owner_name ? (
+            <p class="post-meta">著者: {post.author}</p>
+          ) : c.get('site').owner_name ? (
+            <p class="post-meta">
+              著者: <a href="/gioi-thieu#tac-gia">{c.get('site').owner_name}</a>
+            </p>
+          ) : null}
         </header>
         <div class="prose">{raw(withMediaBase(html))}</div>
       </article>
