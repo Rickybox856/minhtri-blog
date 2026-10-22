@@ -365,3 +365,7 @@ section { margin-top: 64px; }
 .forum-mod-body { white-space: pre-wrap; background: #fffdf7; padding: 10px 12px; border-radius: 8px; }
 .forum-mod-actions { display: flex; flex-wrap: wrap; gap: 8px; justify-content: flex-start; }
 .admin-tabs { display: flex; gap: 8px; }
+
+/* Khu vực xoá trong trang sửa */
+.danger-zone { margin-top: 36px; padding: 16px 18px; border: 1px solid #e6b8b2; border-radius: 12px; background: #fdf4f2; max-width: 480px; }
+.danger-zone h2 { margin-top: 0; font-size: 1.05rem; color: #962d22; }

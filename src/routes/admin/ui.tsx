@@ -11,6 +11,7 @@ const SECTIONS = [
   { href: '/quan-tri/lien-he', label: 'Lời nhắn' },
   { href: '/quan-tri/thanh-vien', label: 'Thành viên' },
   { href: '/quan-tri/dien-dan', label: 'Diễn đàn' },
+  { href: '/quan-tri/chuyen-muc-dien-dan', label: 'Chuyên mục diễn đàn' },
   { href: '/quan-tri/doi-mat-khau', label: 'Đổi mật khẩu' },
 ]
 
