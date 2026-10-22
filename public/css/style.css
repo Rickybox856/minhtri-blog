@@ -284,3 +284,8 @@ section { margin-top: 64px; }
 .prose .video-embed iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
 .prose .video-cta { margin: 0 0 28px; text-align: center; }
 .prose .video-cta .btn { color: #fff; font-weight: 700; padding: 12px 26px; }
+
+/* Bài nghe âm thanh */
+.prose .audio-player { margin: 24px 0 28px; padding: 16px 18px; border: 1px solid var(--border); border-radius: 12px; background: #fffdf7; }
+.prose .audio-player p { margin: 0 0 10px; font-weight: 700; color: var(--honey-dark); }
+.prose .audio-player audio { display: block; width: 100%; }
