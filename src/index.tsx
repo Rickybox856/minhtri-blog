@@ -37,7 +37,8 @@ app.use(async (c, next) => {
   await next()
 })
 
-app.use(secureHeaders())
+// YouTube nhúng (iframe) cần biết trang gốc, "no-referrer" mặc định gây lỗi 153
+app.use(secureHeaders({ referrerPolicy: 'strict-origin-when-cross-origin' }))
 
 // /gioi-thieu/ → /gioi-thieu (một số ứng dụng tự thêm dấu / cuối đường dẫn)
 app.use(async (c, next) => {
