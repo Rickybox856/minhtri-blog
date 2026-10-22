@@ -186,7 +186,7 @@ async function loadChannel(c: C) {
 type VideoItem = {
   id: string
   snippet: { title: string; description: string; tags?: string[]; categoryId: string; publishedAt: string; defaultLanguage?: string; defaultAudioLanguage?: string; thumbnails?: { medium?: { url: string } } }
-  status: { privacyStatus: string; uploadStatus?: string; embeddable?: boolean; license?: string; publicStatsViewable?: boolean; selfDeclaredMadeForKids?: boolean; madeForKids?: boolean }
+  status: { privacyStatus: string; publishAt?: string; uploadStatus?: string; embeddable?: boolean; license?: string; publicStatsViewable?: boolean; selfDeclaredMadeForKids?: boolean; madeForKids?: boolean }
   statistics?: { viewCount?: string; likeCount?: string; commentCount?: string }
 }
 
@@ -233,7 +233,12 @@ app.get('/:id', async (c) => {
         title={ch.title}
         active={BASE}
         flash={c.req.query('ok') === 'saved' ? 'saved' : undefined}
-        actions={<a class="btn" href={`${BASE}/${ch.id}/tai-len`}>⬆ Tải video lên</a>}
+        actions={
+          <>
+            <a class="btn btn-outline" href={`${BASE}/${ch.id}/hang-loat`}>☑ Quản lý hàng loạt / Đặt lịch</a>
+            <a class="btn" href={`${BASE}/${ch.id}/tai-len`}>⬆ Tải video lên</a>
+          </>
+        }
       >
         {c.req.query('ok') === 'video' && <p class="notice success">Đã lưu thay đổi video lên YouTube.</p>}
         <div class="yt-stats">
@@ -243,6 +248,10 @@ app.get('/:id', async (c) => {
         </div>
 
         <h2>Video mới nhất</h2>
+        <p class="muted">
+          Muốn đổi chế độ hiển thị nhiều video cùng lúc hoặc đặt lịch đăng cho video nháp?{' '}
+          <a href={`${BASE}/${ch.id}/hang-loat`}>Mở trang Quản lý hàng loạt →</a>
+        </p>
         <table class="admin-table yt-videos">
           <thead>
             <tr>
@@ -264,7 +273,16 @@ app.get('/:id', async (c) => {
                     <a href={`${BASE}/${ch.id}/video/${v.id}`}><strong>{v.snippet.title}</strong></a>
                     <div class="muted">{v.snippet.publishedAt.slice(0, 10)}</div>
                   </td>
-                  <td>{PRIVACY.find(([k]) => k === v.status.privacyStatus)?.[1].split(' (')[0] ?? v.status.privacyStatus}</td>
+                  <td>
+                    {v.status.publishAt && v.status.privacyStatus === 'private' ? (
+                      <>
+                        Đã lên lịch
+                        <div class="muted">{new Date(Date.parse(v.status.publishAt) + 9 * 3600_000).toISOString().slice(0, 16).replace('T', ' ')} JST</div>
+                      </>
+                    ) : (
+                      PRIVACY.find(([k]) => k === v.status.privacyStatus)?.[1].split(' (')[0] ?? v.status.privacyStatus
+                    )}
+                  </td>
                   <td>{fmt(v.statistics?.viewCount)}</td>
                   <td>
                     <span class={`seo-score ${seo.score >= 80 ? 'good' : seo.score >= 50 ? 'mid' : 'bad'}`}>{seo.score}</span>
