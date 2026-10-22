@@ -107,7 +107,9 @@ app.get('/', async (c) => {
               <li><b>Branding</b>: điền tên ứng dụng và email.</li>
               <li>
                 <b>Audience</b>: chọn <b>External</b>, rồi bấm <b>Publish app</b> (chuyển sang <b>In production</b>) — nếu để “Testing”,
-                Google tự ngắt kết nối sau 7 ngày.
+                Google tự ngắt kết nối sau 7 ngày. Nếu vẫn để “Testing” thì phải thêm email Google của bạn ở mục{' '}
+                <b>Test users → Add users</b>, nếu không sẽ gặp lỗi <code>Error 403: access_denied</code> (“has not completed the
+                Google verification process”).
               </li>
               <li>
                 <b>Data Access</b> (Scopes) — <i>không bắt buộc</i>: <b>Add or remove scopes</b> → tick <code>.../auth/youtube.force-ssl</code>.
