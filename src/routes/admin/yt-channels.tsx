@@ -101,13 +101,23 @@ app.get('/', async (c) => {
             <b>APIs &amp; Services → Library</b>: tìm <b>YouTube Data API v3</b> → <b>Enable</b>.
           </li>
           <li>
-            <b>APIs &amp; Services → OAuth consent screen</b>: chọn <b>External</b>, điền tên ứng dụng và email. Ở mục <b>Scopes</b> thêm{' '}
-            <code>.../auth/youtube.force-ssl</code>. Cuối cùng bấm <b>Publish app</b> (chuyển sang <b>In production</b>) — nếu để
-            “Testing”, Google tự ngắt kết nối sau 7 ngày.
+            <b>APIs &amp; Services → OAuth consent screen</b> (giao diện mới tên là <b>Google Auth Platform</b>, menu bên trái có Branding /
+            Audience / Clients / Data Access):
+            <ul>
+              <li><b>Branding</b>: điền tên ứng dụng và email.</li>
+              <li>
+                <b>Audience</b>: chọn <b>External</b>, rồi bấm <b>Publish app</b> (chuyển sang <b>In production</b>) — nếu để “Testing”,
+                Google tự ngắt kết nối sau 7 ngày.
+              </li>
+              <li>
+                <b>Data Access</b> (Scopes) — <i>không bắt buộc</i>: <b>Add or remove scopes</b> → tick <code>.../auth/youtube.force-ssl</code>.
+                Không thấy thì bỏ qua, website tự xin quyền khi liên kết.
+              </li>
+            </ul>
           </li>
           <li>
-            <b>APIs &amp; Services → Credentials → Create credentials → OAuth client ID</b>, loại <b>Web application</b>. Ở{' '}
-            <b>Authorized redirect URIs</b> dán đúng địa chỉ:
+            <b>Clients → Create client</b> (giao diện cũ: <b>Credentials → Create credentials → OAuth client ID</b>), loại{' '}
+            <b>Web application</b>. Ở <b>Authorized redirect URIs</b> dán đúng địa chỉ:
             <br />
             <code class="temp-pass">{redirectUri}</code>
           </li>
