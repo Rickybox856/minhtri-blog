@@ -15,6 +15,7 @@ import forumBoardsAdmin from './forum-boards'
 import youtubeAdmin from './youtube'
 import ytChannelsAdmin from './yt-channels'
 import ytBulkAdmin from './yt-bulk'
+import ytAutoAdmin from './yt-auto'
 import membersAdmin from './members'
 import productsAdmin from './products'
 import settingsAdmin from './settings'
@@ -288,6 +289,7 @@ app.route('/dien-dan', forumAdmin)
 app.route('/chuyen-muc-dien-dan', forumBoardsAdmin)
 app.route('/youtube', youtubeAdmin)
 app.route('/kenh-youtube', ytBulkAdmin)
+app.route('/kenh-youtube', ytAutoAdmin)
 app.route('/kenh-youtube', ytChannelsAdmin)
 
 export default app

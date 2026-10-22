@@ -441,3 +441,9 @@ section { margin-top: 64px; }
   .yt-bulk-bar { position: static; }
   .yt-bulk-table th:nth-child(2), .yt-bulk-table td:nth-child(2) { display: none; }
 }
+/* Tự động đặt lịch */
+.yt-weekdays { display: flex; flex-wrap: wrap; gap: 8px 18px; border: 1px solid var(--border); border-radius: 10px; padding: 10px 14px; margin: 0; }
+.yt-weekdays legend { font-weight: 600; padding: 0 6px; }
+.yt-auto-plan { padding: 14px 18px; margin: 12px 0 20px; display: grid; gap: 10px; }
+.yt-auto-plan h3 { margin: 0; font-size: 1.05rem; }
+.btn.btn-small { padding: 3px 10px; font-size: 0.82rem; }

@@ -94,7 +94,7 @@ app.get('/:id/hang-loat', async (c) => {
   return c.render(
     <AdminShell title={`Quản lý hàng loạt: ${ch.title}`} active={BASE}>
       <p>
-        <a href={`${BASE}/${ch.id}`}>← {ch.title}</a>
+        <a href={`${BASE}/${ch.id}`}>← {ch.title}</a> · <a href={`${BASE}/${ch.id}/tu-dong-len-lich`}>⏰ Tự động đặt lịch video nháp</a>
       </p>
       {truncated && <p class="notice error">Kênh có hơn {MAX_PAGES * 50} video, trang này chỉ hiện {MAX_PAGES * 50} video mới nhất.</p>}
 

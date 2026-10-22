@@ -236,6 +236,7 @@ app.get('/:id', async (c) => {
         actions={
           <>
             <a class="btn btn-outline" href={`${BASE}/${ch.id}/hang-loat`}>☑ Quản lý hàng loạt / Đặt lịch</a>
+            <a class="btn btn-outline" href={`${BASE}/${ch.id}/tu-dong-len-lich`}>⏰ Tự động đặt lịch</a>
             <a class="btn" href={`${BASE}/${ch.id}/tai-len`}>⬆ Tải video lên</a>
           </>
         }
@@ -250,7 +251,8 @@ app.get('/:id', async (c) => {
         <h2>Video mới nhất</h2>
         <p class="muted">
           Muốn đổi chế độ hiển thị nhiều video cùng lúc hoặc đặt lịch đăng cho video nháp?{' '}
-          <a href={`${BASE}/${ch.id}/hang-loat`}>Mở trang Quản lý hàng loạt →</a>
+          <a href={`${BASE}/${ch.id}/hang-loat`}>Mở trang Quản lý hàng loạt →</a>{' '}
+          · Hoặc để website <a href={`${BASE}/${ch.id}/tu-dong-len-lich`}>tự động đặt lịch video nháp →</a>
         </p>
         <table class="admin-table yt-videos">
           <thead>

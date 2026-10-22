@@ -5,6 +5,8 @@ import { getSetting } from './lib/auth'
 import { loadEarlySettings } from './lib/early-settings'
 import { listBoards, listThreadsForSitemap } from './lib/forum'
 import { runYoutubeSync } from './lib/youtube-sync'
+import { runAutoSchedule } from './lib/yt-autoschedule'
+import type { GEnv } from './lib/google'
 import { mediaUrl } from './lib/format'
 import { loadMember } from './lib/members'
 import { pageCache } from './lib/page-cache'
@@ -146,7 +148,17 @@ export default {
   fetch: app.fetch,
   // Cron Trigger (wrangler.jsonc → triggers.crons): mỗi giờ kiểm tra kênh YouTube và đăng bài cho video mới
   async scheduled(_event: ScheduledController, env: CloudflareBindings, ctx: ExecutionContext) {
-    ctx.waitUntil(runYoutubeSync(env).then((r) => console.log('youtube-sync', JSON.stringify(r))))
+    // Chạy lần lượt để không cùng lúc dùng hết giới hạn số request của Worker
+    ctx.waitUntil(
+      (async () => {
+        await runYoutubeSync(env)
+          .then((r) => console.log('youtube-sync', JSON.stringify(r)))
+          .catch((e) => console.error('youtube-sync', e))
+        await runAutoSchedule(env as unknown as GEnv)
+          .then((r) => console.log('yt-autoschedule', JSON.stringify(r)))
+          .catch((e) => console.error('yt-autoschedule', e))
+      })()
+    )
   },
 } satisfies ExportedHandler<CloudflareBindings>
 
