@@ -2,7 +2,7 @@ import { marked } from 'marked'
 import { getSetting, setSettings } from './auth'
 import { bumpCacheVersion } from './page-cache'
 import { buildVideoPost, isCompilationTitle } from './video-post'
-import { fetchChannelVideos, fetchThumbnail } from './youtube'
+import { fetchChannelVideos, fetchChannelVideosApi, fetchThumbnail } from './youtube'
 import type { ChannelVideo } from './youtube'
 
 // Theo dõi kênh YouTube: chạy mỗi giờ (Cron Trigger) hoặc khi bấm "Kiểm tra ngay" trong quản trị.
@@ -13,10 +13,15 @@ const CATEGORY = 'dong-video'
 const PRODUCTS = ['radio-book', 'radio-book2']
 const MAX_PER_RUN = 3 // giữ mỗi lần chạy nhẹ; video còn lại sẽ được xử lý ở lần sau
 
-type Env = { DB: D1Database; MEDIA: R2Bucket }
+// YOUTUBE_API_KEY: secret của Worker (tuỳ chọn); nếu không có thì dùng key lưu trong trang quản trị
+type Env = { DB: D1Database; MEDIA: R2Bucket; YOUTUBE_API_KEY?: string }
 
 export type SyncResult = {
   at: string
+  /** Nguồn đọc danh sách video: trang kênh, hoặc API dự phòng */
+  source?: 'page' | 'api'
+  /** Lỗi của trang kênh khi đã phải chuyển sang API */
+  fallbackReason?: string
   found: number
   posted: { id: string; slug: string; title: string }[]
   skipped: number
@@ -27,6 +32,27 @@ export type SyncResult = {
 
 export const getChannelId = async (db: D1Database) => (await getSetting(db, 'yt.channel_id')) || DEFAULT_CHANNEL
 export const isEnabled = async (db: D1Database) => (await getSetting(db, 'yt.enabled')) !== '0'
+export const getApiKey = async (env: Env) => env.YOUTUBE_API_KEY || (await getSetting(env.DB, 'yt.api_key')) || ''
+
+/**
+ * Danh sách video mới nhất: đọc trang kênh trước (không tốn hạn mức),
+ * lỗi hoặc không đọc được video nào thì chuyển sang YouTube Data API.
+ */
+async function listVideos(env: Env, channelId: string, result: SyncResult) {
+  try {
+    const videos = await fetchChannelVideos(channelId)
+    result.source = 'page'
+    return videos
+  } catch (err) {
+    const pageError = String(err instanceof Error ? err.message : err)
+    const key = await getApiKey(env)
+    if (!key) throw new Error(`${pageError} Chưa có API key dự phòng.`)
+    result.fallbackReason = pageError.slice(0, 200)
+    const videos = await fetchChannelVideosApi(channelId, key)
+    result.source = 'api'
+    return videos
+  }
+}
 
 /** Tạo và đăng bài cho một video. Trả về slug */
 export async function publishVideoPost(env: Env, video: ChannelVideo) {
@@ -82,8 +108,12 @@ export async function runYoutubeSync(env: Env, opts: { force?: boolean } = {}): 
       result.error = 'Đang tắt tự động.'
       return result
     }
-    const videos = await fetchChannelVideos(await getChannelId(env.DB))
+    const videos = await listVideos(env, await getChannelId(env.DB), result)
     result.found = videos.length
+    if (!videos.length) {
+      await setSettings(env.DB, { 'yt.last_run': JSON.stringify(result) })
+      return result
+    }
     const placeholders = videos.map(() => '?').join(',')
     const known = new Set(
       (

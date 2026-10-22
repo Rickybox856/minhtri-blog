@@ -62,6 +62,57 @@ export async function fetchChannelVideos(channelId: string): Promise<ChannelVide
   return videos
 }
 
+// --- Dự phòng: YouTube Data API v3 (chính thức, cần API key Google, miễn phí 10.000 đơn vị/ngày) ---
+// Mỗi lần dùng tốn 2 đơn vị: playlistItems (danh sách tải lên) + videos (thời lượng, để bỏ Shorts/livestream).
+
+const API = 'https://www.googleapis.com/youtube/v3'
+const SHORT_MAX_SECONDS = 180 // Shorts dài tối đa 3 phút
+
+type ApiError = { error?: { message?: string; errors?: { reason?: string }[] } }
+
+async function apiGet<T>(path: string, params: Record<string, string>, key: string): Promise<T> {
+  const res = await fetch(`${API}/${path}?${new URLSearchParams({ ...params, key })}`)
+  const data = (await res.json().catch(() => ({}))) as T & ApiError
+  if (!res.ok) {
+    const reason = data.error?.errors?.[0]?.reason
+    const msg =
+      reason === 'quotaExceeded'
+        ? 'API đã hết hạn mức trong ngày'
+        : res.status === 400 || res.status === 403
+          ? `API key không hợp lệ hoặc chưa bật YouTube Data API v3 (${data.error?.message ?? res.status})`
+          : `YouTube API trả mã ${res.status}`
+    throw new Error(msg)
+  }
+  return data
+}
+
+/** ISO 8601 "PT1H2M3S" → giây */
+const isoSeconds = (d: string) => {
+  const m = d.match(/P(?:(\d+)D)?T?(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?/)
+  return m ? (+(m[1] ?? 0)) * 86400 + (+(m[2] ?? 0)) * 3600 + (+(m[3] ?? 0)) * 60 + +(m[4] ?? 0) : 0
+}
+
+export async function fetchChannelVideosApi(channelId: string, key: string): Promise<ChannelVideo[]> {
+  // Danh sách tải lên của kênh có mã UU… tương ứng UC…
+  const uploads = `UU${channelId.slice(2)}`
+  const list = await apiGet<{ items?: { snippet: { title: string; resourceId: { videoId: string } } }[] }>(
+    'playlistItems',
+    { part: 'snippet', playlistId: uploads, maxResults: '30' },
+    key
+  )
+  const items = (list.items ?? []).map((i) => ({ id: i.snippet.resourceId.videoId, title: i.snippet.title }))
+  if (!items.length) return []
+  const details = await apiGet<{
+    items?: { id: string; contentDetails: { duration: string }; snippet: { liveBroadcastContent: string } }[]
+  }>('videos', { part: 'contentDetails,snippet', id: items.map((v) => v.id).join(',') }, key)
+  const ok = new Set(
+    (details.items ?? [])
+      .filter((d) => d.snippet.liveBroadcastContent === 'none' && isoSeconds(d.contentDetails.duration) > SHORT_MAX_SECONDS)
+      .map((d) => d.id)
+  )
+  return items.filter((v) => ok.has(v.id))
+}
+
 /** Tải ảnh thumbnail lớn nhất có sẵn */
 export async function fetchThumbnail(id: string): Promise<ArrayBuffer | null> {
   for (const name of ['maxresdefault', 'hqdefault']) {

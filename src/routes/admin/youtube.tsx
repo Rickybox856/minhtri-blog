@@ -1,7 +1,8 @@
 import { Hono } from 'hono'
 import { getSetting, setSettings } from '../../lib/auth'
 import { formatDateTime } from '../../lib/forum'
-import { DEFAULT_CHANNEL, getChannelId, isEnabled, publishExisting, runYoutubeSync } from '../../lib/youtube-sync'
+import { fetchChannelVideosApi } from '../../lib/youtube'
+import { DEFAULT_CHANNEL, getApiKey, getChannelId, isEnabled, publishExisting, runYoutubeSync } from '../../lib/youtube-sync'
 import type { SyncResult } from '../../lib/youtube-sync'
 import { AdminShell, Badge } from './ui'
 
@@ -21,7 +22,9 @@ const STATUS: Record<string, string> = {
 
 const RunSummary = ({ r }: { r: SyncResult }) => (
   <p class={`notice ${r.error ? 'error' : 'success'}`}>
-    Lần kiểm tra gần nhất: {formatDateTime(r.at.replace('T', ' ').slice(0, 19))} (giờ Nhật) · thấy {r.found} video
+    Lần kiểm tra gần nhất: {formatDateTime(r.at.replace('T', ' ').slice(0, 19))} (giờ Nhật)
+    {r.source === 'page' && <> · nguồn: trang kênh</>}
+    {r.source === 'api' && <> · nguồn: <strong>API dự phòng</strong> (trang kênh lỗi: {r.fallbackReason})</>} · thấy {r.found} video
     {r.baseline > 0 && <> · ghi nhận {r.baseline} video có sẵn (lần đầu, không đăng)</>}
     {r.posted.length > 0 && <> · <strong>đăng {r.posted.length} bài mới</strong></>}
     {r.skipped > 0 && <> · bỏ qua {r.skipped} bản tổng hợp</>}
@@ -32,14 +35,16 @@ const RunSummary = ({ r }: { r: SyncResult }) => (
 )
 
 app.get('/', async (c) => {
-  const [channel, enabled, lastRaw, { results }] = await Promise.all([
+  const [channel, enabled, lastRaw, { results }, apiKey] = await Promise.all([
     getChannelId(c.env.DB),
     isEnabled(c.env.DB),
     getSetting(c.env.DB, 'yt.last_run'),
     c.env.DB.prepare('SELECT * FROM youtube_videos ORDER BY created_at DESC, rowid DESC LIMIT 100').all<Row>(),
+    getApiKey(c.env),
   ])
   const last = lastRaw ? (JSON.parse(lastRaw) as SyncResult) : null
   const msg = c.req.query('ok')
+  const keyFromSecret = Boolean((c.env as { YOUTUBE_API_KEY?: string }).YOUTUBE_API_KEY)
 
   return c.render(
     <AdminShell title="Theo dõi YouTube" active={BASE}>
@@ -70,8 +75,38 @@ app.get('/', async (c) => {
             Mặc định: {DEFAULT_CHANNEL}. Đổi kênh thì lần kiểm tra đầu tiên chỉ ghi nhận các video đang có, không đăng hàng loạt.
           </small>
         </label>
+        <label>
+          API key YouTube Data API v3 (dự phòng khi không đọc được trang kênh)
+          <input
+            name="api_key"
+            type="password"
+            autocomplete="off"
+            placeholder={apiKey ? `Đã lưu (…${apiKey.slice(-4)}) — để trống nếu không đổi` : 'Dán API key (bắt đầu bằng AIza…)'}
+            disabled={keyFromSecret}
+          />
+          <small class="muted">
+            {keyFromSecret
+              ? 'Đang dùng key trong secret YOUTUBE_API_KEY của Worker.'
+              : apiKey
+                ? 'Đã có key dự phòng. Muốn xoá key, đánh dấu ô bên dưới.'
+                : 'Chưa có key: nếu YouTube đổi giao diện, việc tự đăng bài sẽ tạm dừng cho tới khi có key.'}
+          </small>
+        </label>
+        {apiKey && !keyFromSecret && (
+          <label class="checkbox">
+            <input type="checkbox" name="clear_key" /> Xoá API key đã lưu
+          </label>
+        )}
         <button class="btn btn-outline" type="submit">Lưu cài đặt</button>
       </form>
+
+      {apiKey && (
+        <form method="post" action={`${BASE}/thu-api`} class="inline-form yt-test">
+          <button class="btn btn-outline" type="submit">🧪 Thử API dự phòng</button>
+          <small class="muted"> Chỉ đọc danh sách video qua API (tốn 2/10.000 đơn vị hạn mức ngày), không đăng bài.</small>
+        </form>
+      )}
+      {c.req.query('api') && <p class={`notice ${c.req.query('api') === 'ok' ? 'success' : 'error'}`}>{c.req.query('api_msg')}</p>}
 
       <h2>Video đã thấy</h2>
       <table class="admin-table">
@@ -128,13 +163,32 @@ app.post('/cai-dat', async (c) => {
   const channel = String(form.channel ?? '').trim()
   if (!/^UC[\w-]{22}$/.test(channel)) return c.redirect(BASE, 303)
   const changed = channel !== (await getChannelId(c.env.DB))
+  const newKey = String(form.api_key ?? '').trim()
+  if (newKey && !/^[\w-]{30,60}$/.test(newKey)) return c.redirect(`${BASE}?api=err&api_msg=${encodeURIComponent('API key không đúng định dạng.')}`, 303)
   await setSettings(c.env.DB, {
     'yt.enabled': form.enabled ? '1' : '0',
     'yt.channel_id': channel,
+    ...(newKey ? { 'yt.api_key': newKey } : form.clear_key ? { 'yt.api_key': '' } : {}),
     // Đổi kênh: lần đầu chỉ ghi nhận, không đăng hàng loạt video cũ của kênh mới
     ...(changed ? { 'yt.baseline_done': '' } : {}),
   })
   return c.redirect(`${BASE}?ok=saved`, 303)
+})
+
+app.post('/thu-api', async (c) => {
+  const key = await getApiKey(c.env)
+  let api: 'ok' | 'err' = 'err'
+  let msg = 'Chưa có API key.'
+  if (key) {
+    try {
+      const videos = await fetchChannelVideosApi(await getChannelId(c.env.DB), key)
+      api = 'ok'
+      msg = `API hoạt động: đọc được ${videos.length} video (đã bỏ Shorts/livestream). Mới nhất: ${videos[0]?.title ?? '—'}`
+    } catch (err) {
+      msg = `API lỗi: ${err instanceof Error ? err.message : String(err)}`
+    }
+  }
+  return c.redirect(`${BASE}?api=${api}&api_msg=${encodeURIComponent(msg.slice(0, 300))}`, 303)
 })
 
 app.post('/dang/:id', async (c) => {
