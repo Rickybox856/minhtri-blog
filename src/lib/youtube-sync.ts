@@ -1,5 +1,7 @@
 import { marked } from 'marked'
 import { getSetting, setSettings } from './auth'
+import { accessToken } from './google'
+import type { ChannelRow } from './google'
 import { bumpCacheVersion } from './page-cache'
 import { buildVideoPost, isCompilationTitle } from './video-post'
 import { fetchChannelVideos, fetchChannelVideosApi, fetchThumbnail } from './youtube'
@@ -13,13 +15,14 @@ const CATEGORY = 'dong-video'
 const PRODUCTS = ['radio-book', 'radio-book2']
 const MAX_PER_RUN = 3 // giữ mỗi lần chạy nhẹ; video còn lại sẽ được xử lý ở lần sau
 
-// YOUTUBE_API_KEY: secret của Worker (tuỳ chọn); nếu không có thì dùng key lưu trong trang quản trị
-type Env = { DB: D1Database; MEDIA: R2Bucket; YOUTUBE_API_KEY?: string }
+// YOUTUBE_API_KEY: secret của Worker (tuỳ chọn); nếu không có thì dùng key lưu trong trang quản trị.
+// CACHE + TOKEN_ENC_KEY: để dùng kết nối Google của kênh đã liên kết khi không có API key.
+type Env = { DB: D1Database; MEDIA: R2Bucket; CACHE: KVNamespace; YOUTUBE_API_KEY?: string; TOKEN_ENC_KEY?: string }
 
 export type SyncResult = {
   at: string
   /** Nguồn đọc danh sách video: trang kênh, hoặc API dự phòng */
-  source?: 'page' | 'api'
+  source?: 'page' | 'api' | 'oauth'
   /** Lỗi của trang kênh khi đã phải chuyển sang API */
   fallbackReason?: string
   found: number
@@ -45,13 +48,36 @@ async function listVideos(env: Env, channelId: string, result: SyncResult) {
     return videos
   } catch (err) {
     const pageError = String(err instanceof Error ? err.message : err)
-    const key = await getApiKey(env)
-    if (!key) throw new Error(`${pageError} Chưa có API key dự phòng.`)
     result.fallbackReason = pageError.slice(0, 200)
-    const videos = await fetchChannelVideosApi(channelId, key)
-    result.source = 'api'
+    const key = await getApiKey(env)
+    if (key) {
+      const videos = await fetchChannelVideosApi(channelId, { key })
+      result.source = 'api'
+      return videos
+    }
+    const token = await linkedChannelToken(env, channelId)
+    if (!token) throw new Error(`${pageError} Chưa có API key dự phòng và chưa liên kết kênh YouTube nào.`)
+    const videos = await fetchChannelVideosApi(channelId, { token })
+    result.source = 'oauth'
     return videos
   }
+}
+
+/** Mã truy cập của một kênh đã liên kết (ưu tiên chính kênh đang theo dõi) */
+async function linkedChannelToken(env: Env, channelId: string) {
+  const { results } = await env.DB.prepare(
+    "SELECT * FROM youtube_channels WHERE status = 'ok' ORDER BY channel_id = ? DESC, id"
+  )
+    .bind(channelId)
+    .all<ChannelRow>()
+  for (const ch of results) {
+    try {
+      return await accessToken(env, ch)
+    } catch {
+      // kênh này hết hạn → thử kênh khác
+    }
+  }
+  return null
 }
 
 /** Tạo và đăng bài cho một video. Trả về slug */

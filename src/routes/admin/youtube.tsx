@@ -24,7 +24,8 @@ const RunSummary = ({ r }: { r: SyncResult }) => (
   <p class={`notice ${r.error ? 'error' : 'success'}`}>
     Lần kiểm tra gần nhất: {formatDateTime(r.at.replace('T', ' ').slice(0, 19))} (giờ Nhật)
     {r.source === 'page' && <> · nguồn: trang kênh</>}
-    {r.source === 'api' && <> · nguồn: <strong>API dự phòng</strong> (trang kênh lỗi: {r.fallbackReason})</>} · thấy {r.found} video
+    {r.source === 'api' && <> · nguồn: <strong>API dự phòng</strong> (trang kênh lỗi: {r.fallbackReason})</>}
+    {r.source === 'oauth' && <> · nguồn: <strong>kết nối Google của kênh đã liên kết</strong> (trang kênh lỗi: {r.fallbackReason})</>} · thấy {r.found} video
     {r.baseline > 0 && <> · ghi nhận {r.baseline} video có sẵn (lần đầu, không đăng)</>}
     {r.posted.length > 0 && <> · <strong>đăng {r.posted.length} bài mới</strong></>}
     {r.skipped > 0 && <> · bỏ qua {r.skipped} bản tổng hợp</>}
@@ -188,7 +189,7 @@ app.post('/thu-api', async (c) => {
   let msg = 'Chưa có API key.'
   if (key) {
     try {
-      const videos = await fetchChannelVideosApi(await getChannelId(c.env.DB), key)
+      const videos = await fetchChannelVideosApi(await getChannelId(c.env.DB), { key })
       api = 'ok'
       msg = `API hoạt động: đọc được ${videos.length} video (đã bỏ Shorts/livestream). Mới nhất: ${videos[0]?.title ?? '—'}`
     } catch (err) {

@@ -70,16 +70,24 @@ const SHORT_MAX_SECONDS = 180 // Shorts dài tối đa 3 phút
 
 type ApiError = { error?: { message?: string; errors?: { reason?: string }[] } }
 
-async function apiGet<T>(path: string, params: Record<string, string>, key: string): Promise<T> {
-  const res = await fetch(`${API}/${path}?${new URLSearchParams({ ...params, key })}`)
+/** Xác thực API: API key, hoặc mã truy cập OAuth của một kênh đã liên kết (đọc được dữ liệu công khai của mọi kênh) */
+export type ApiAuth = { key: string } | { token: string }
+
+async function apiGet<T>(path: string, params: Record<string, string>, auth: ApiAuth): Promise<T> {
+  const res =
+    'key' in auth
+      ? await fetch(`${API}/${path}?${new URLSearchParams({ ...params, key: auth.key })}`)
+      : await fetch(`${API}/${path}?${new URLSearchParams(params)}`, { headers: { Authorization: `Bearer ${auth.token}` } })
   const data = (await res.json().catch(() => ({}))) as T & ApiError
   if (!res.ok) {
     const reason = data.error?.errors?.[0]?.reason
     const msg =
       reason === 'quotaExceeded'
         ? 'API đã hết hạn mức trong ngày'
+        : res.status === 401
+          ? 'Quyền truy cập kênh đã liên kết không còn hợp lệ (cần kết nối lại)'
         : res.status === 400 || res.status === 403
-          ? `API key không hợp lệ hoặc chưa bật YouTube Data API v3 (${data.error?.message ?? res.status})`
+          ? `${'key' in auth ? 'API key không hợp lệ hoặc chưa' : 'Project Google chưa'} bật YouTube Data API v3 (${data.error?.message ?? res.status})`
           : `YouTube API trả mã ${res.status}`
     throw new Error(msg)
   }
@@ -92,22 +100,28 @@ const isoSeconds = (d: string) => {
   return m ? (+(m[1] ?? 0)) * 86400 + (+(m[2] ?? 0)) * 3600 + (+(m[3] ?? 0)) * 60 + +(m[4] ?? 0) : 0
 }
 
-export async function fetchChannelVideosApi(channelId: string, key: string): Promise<ChannelVideo[]> {
+export async function fetchChannelVideosApi(channelId: string, auth: ApiAuth): Promise<ChannelVideo[]> {
   // Danh sách tải lên của kênh có mã UU… tương ứng UC…
   const uploads = `UU${channelId.slice(2)}`
   const list = await apiGet<{ items?: { snippet: { title: string; resourceId: { videoId: string } } }[] }>(
     'playlistItems',
     { part: 'snippet', playlistId: uploads, maxResults: '30' },
-    key
+    auth
   )
   const items = (list.items ?? []).map((i) => ({ id: i.snippet.resourceId.videoId, title: i.snippet.title }))
   if (!items.length) return []
   const details = await apiGet<{
-    items?: { id: string; contentDetails: { duration: string }; snippet: { liveBroadcastContent: string } }[]
-  }>('videos', { part: 'contentDetails,snippet', id: items.map((v) => v.id).join(',') }, key)
+    items?: { id: string; contentDetails: { duration: string }; snippet: { liveBroadcastContent: string }; status: { privacyStatus: string } }[]
+  }>('videos', { part: 'contentDetails,snippet,status', id: items.map((v) => v.id).join(',') }, auth)
+  // Chỉ video công khai: khi dùng quyền của chủ kênh, danh sách có cả video nháp / đang chờ lịch
   const ok = new Set(
     (details.items ?? [])
-      .filter((d) => d.snippet.liveBroadcastContent === 'none' && isoSeconds(d.contentDetails.duration) > SHORT_MAX_SECONDS)
+      .filter(
+        (d) =>
+          d.status.privacyStatus === 'public' &&
+          d.snippet.liveBroadcastContent === 'none' &&
+          isoSeconds(d.contentDetails.duration) > SHORT_MAX_SECONDS
+      )
       .map((d) => d.id)
   )
   return items.filter((v) => ok.has(v.id))
