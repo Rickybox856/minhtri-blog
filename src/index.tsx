@@ -4,6 +4,7 @@ import { listNavCategories, listPosts, listPublishedPages, recordProductClick } 
 import { getSetting } from './lib/auth'
 import { loadEarlySettings } from './lib/early-settings'
 import { listBoards, listThreadsForSitemap } from './lib/forum'
+import { runYoutubeSync } from './lib/youtube-sync'
 import { mediaUrl } from './lib/format'
 import { loadMember } from './lib/members'
 import { pageCache } from './lib/page-cache'
@@ -139,4 +140,11 @@ app.notFound((c) => {
   )
 })
 
-export default app
+export default {
+  fetch: app.fetch,
+  // Cron Trigger (wrangler.jsonc → triggers.crons): mỗi giờ kiểm tra kênh YouTube và đăng bài cho video mới
+  async scheduled(_event: ScheduledController, env: CloudflareBindings, ctx: ExecutionContext) {
+    ctx.waitUntil(runYoutubeSync(env).then((r) => console.log('youtube-sync', JSON.stringify(r))))
+  },
+} satisfies ExportedHandler<CloudflareBindings>
+

@@ -9,6 +9,7 @@ const SECTIONS = [
   { href: '/quan-tri/anh', label: 'Thư viện ảnh' },
   { href: '/quan-tri/cai-dat', label: 'Cài đặt site' },
   { href: '/quan-tri/lien-he', label: 'Lời nhắn' },
+  { href: '/quan-tri/youtube', label: 'Theo dõi YouTube' },
   { href: '/quan-tri/thanh-vien', label: 'Thành viên' },
   { href: '/quan-tri/dien-dan', label: 'Diễn đàn' },
   { href: '/quan-tri/chuyen-muc-dien-dan', label: 'Chuyên mục diễn đàn' },

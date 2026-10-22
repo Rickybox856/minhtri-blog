@@ -369,3 +369,7 @@ section { margin-top: 64px; }
 /* Khu vực xoá trong trang sửa */
 .danger-zone { margin-top: 36px; padding: 16px 18px; border: 1px solid #e6b8b2; border-radius: 12px; background: #fdf4f2; max-width: 480px; }
 .danger-zone h2 { margin-top: 0; font-size: 1.05rem; color: #962d22; }
+
+/* Theo dõi YouTube */
+.yt-actions { margin: 12px 0 20px; }
+.yt-settings { margin-bottom: 28px; }
