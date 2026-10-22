@@ -53,6 +53,13 @@ app.get('/', async (c) => {
         và đăng ngay vào chuyên mục <a href="/chu-de/dong-video" target="_blank" rel="noopener">動画</a>. Bạn sửa/ẩn bài trong mục
         Bài viết như bình thường.
       </p>
+      <p class="notice">
+        Muốn đăng nhập kênh YouTube để quản lý video, sửa SEO và tải video lên? Vào{' '}
+        <a href="/quan-tri/kenh-youtube">
+          <strong>🔗 Liên kết kênh YouTube</strong>
+        </a>
+        .
+      </p>
       {msg === 'run' && <p class="notice success">Đã kiểm tra xong. Kết quả bên dưới.</p>}
       {msg === 'posted' && <p class="notice success">Đã đăng bài cho video.</p>}
       {msg === 'saved' && <p class="notice success">Đã lưu cài đặt.</p>}

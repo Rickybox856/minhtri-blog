@@ -47,12 +47,32 @@ app.get('/', async (c) => {
   const err = c.req.query('err')
 
   return c.render(
-    <AdminShell title="Kênh YouTube" active={BASE} error={err}>
+    <AdminShell title="Liên kết kênh YouTube" active={BASE} error={err}>
       {msg === 'connected' && <p class="notice success">Đã kết nối kênh “{c.req.query('name')}”.</p>}
-      {msg === 'config' && <p class="notice success">Đã lưu cấu hình Google.</p>}
+      {msg === 'config' && <p class="notice success">Đã lưu cấu hình Google. Giờ bấm nút ở Bước 2 để đăng nhập kênh.</p>}
       {msg === 'removed' && <p class="notice success">Đã ngắt kết nối kênh.</p>}
 
-      <h2>Kênh đã kết nối</h2>
+      <section class="yt-steps">
+        <p class="lead">Liên kết kênh YouTube để quản lý video, sửa SEO và tải video lên ngay trên website. Chỉ cần làm 2 bước:</p>
+        <ol class="yt-step-list">
+          <li class={cfg ? 'done' : 'todo'}>
+            <strong>Bước 1 — Cấu hình Google {cfg ? '✅ Đã xong' : '(làm một lần, ~10 phút)'}</strong>
+            <span>{cfg ? 'Đã lưu Client ID và Client secret.' : 'Tạo Client ID / Client secret trong Google Cloud rồi dán vào ô bên dưới.'}</span>
+            {!cfg && <a class="btn btn-outline" href="#buoc-1">Làm bước 1 ↓</a>}
+          </li>
+          <li class={channels.length ? 'done' : 'todo'}>
+            <strong>Bước 2 — Đăng nhập Google và chọn kênh {channels.length ? `✅ Đã liên kết ${channels.length} kênh` : ''}</strong>
+            <span>Bấm nút, đăng nhập tài khoản Google sở hữu kênh, chọn kênh và bấm “Cho phép”. Lặp lại để liên kết thêm kênh.</span>
+            {cfg ? (
+              <a class="btn yt-connect" href={`${BASE}/ket-noi`}>🔗 Đăng nhập & liên kết kênh YouTube</a>
+            ) : (
+              <span class="btn yt-connect disabled" title="Làm bước 1 trước">🔗 Đăng nhập & liên kết kênh YouTube (làm bước 1 trước)</span>
+            )}
+          </li>
+        </ol>
+      </section>
+
+      <h2>Kênh đã liên kết</h2>
       {channels.length ? (
         <div class="yt-channel-list">
           {channels.map((ch) => (
@@ -66,17 +86,10 @@ app.get('/', async (c) => {
           ))}
         </div>
       ) : (
-        <p class="muted">Chưa có kênh nào.</p>
+        <p class="muted">Chưa liên kết kênh nào.</p>
       )}
-      <p>
-        {cfg ? (
-          <a class="btn" href={`${BASE}/ket-noi`}>+ Kết nối kênh YouTube</a>
-        ) : (
-          <span class="muted">Cần nhập cấu hình Google bên dưới trước khi kết nối kênh.</span>
-        )}
-      </p>
 
-      <h2>Cấu hình Google (làm một lần)</h2>
+      <h2 id="buoc-1">Bước 1 — Cấu hình Google (làm một lần)</h2>
       <details class="yt-guide" open={!cfg}>
         <summary>Hướng dẫn tạo Client ID / Client secret</summary>
         <ol>

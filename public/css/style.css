@@ -408,3 +408,10 @@ section { margin-top: 64px; }
 .yt-progress { display: flex; align-items: center; gap: 10px; }
 .yt-progress progress { flex: 1; height: 18px; }
 @media (max-width: 640px) { .yt-stats, .yt-row { grid-template-columns: 1fr; } }
+.yt-steps { margin: 4px 0 24px; padding: 16px 18px; border: 2px solid var(--honey); border-radius: 12px; background: #fffdf7; }
+.yt-step-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 12px; }
+.yt-step-list li { display: grid; gap: 6px; justify-items: start; padding: 12px 14px; border-radius: 10px; background: #fff; border: 1px solid var(--border); }
+.yt-step-list li.done { border-color: #9ccc9c; background: #f3faf3; }
+.yt-step-list span { color: var(--muted); font-size: 0.92rem; }
+.yt-connect { font-size: 1.05rem; padding: 12px 22px; }
+.btn.disabled { opacity: 0.45; cursor: not-allowed; }
