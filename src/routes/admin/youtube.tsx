@@ -74,7 +74,7 @@ app.get('/', async (c) => {
 
       <form method="post" action={`${BASE}/cai-dat`} class="form yt-settings">
         <label class="checkbox">
-          <input type="checkbox" name="enabled" checked={enabled} /> Tự động kiểm tra mỗi giờ và đăng bài
+          <input type="checkbox" name="enabled" checked={enabled} /> Tự động kiểm tra mỗi giờ và đăng 1 bài cho video mới nhất chưa có bài
         </label>
         <label>
           Mã kênh YouTube (bắt đầu bằng UC…)
@@ -202,11 +202,11 @@ app.post('/thu-api', async (c) => {
 app.post('/dang/:id', async (c) => {
   const id = c.req.param('id')
   if (!/^[\w-]{11}$/.test(id)) return c.notFound()
-  try {
-    await publishExisting(c.env, id)
-  } catch {
-    // lỗi đã được ghi vào cột note của video
-  }
+  // waitUntil: vẫn làm xong dù trình duyệt huỷ yêu cầu (bấm nhiều nút liên tiếp) — tránh video kẹt ở "đang xử lý"
+  // Lỗi đã được ghi vào cột note của video
+  const job = publishExisting(c.env, id).catch(() => null)
+  c.executionCtx.waitUntil(job)
+  await job
   return c.redirect(`${BASE}?ok=posted`, 303)
 })
 

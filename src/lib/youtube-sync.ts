@@ -13,7 +13,7 @@ import type { ChannelVideo } from './youtube'
 export const DEFAULT_CHANNEL = 'UCIhJnsL-r9Br9QT7M3wqfVA'
 const CATEGORY = 'dong-video'
 const PRODUCTS = ['radio-book', 'radio-book2']
-const MAX_PER_RUN = 3 // giữ mỗi lần chạy nhẹ; video còn lại sẽ được xử lý ở lần sau
+const MAX_PER_RUN = 1 // mỗi giờ đăng 1 bài cho video mới nhất chưa có bài; video còn lại để các giờ sau
 
 // YOUTUBE_API_KEY: secret của Worker (tuỳ chọn); nếu không có thì dùng key lưu trong trang quản trị.
 // CACHE + TOKEN_ENC_KEY: để dùng kết nối Google của kênh đã liên kết khi không có API key.
@@ -141,14 +141,19 @@ export async function runYoutubeSync(env: Env, opts: { force?: boolean } = {}): 
       return result
     }
     const placeholders = videos.map(() => '?').join(',')
-    const known = new Set(
+    const known = new Map(
       (
-        await env.DB.prepare(`SELECT video_id FROM youtube_videos WHERE video_id IN (${placeholders})`)
+        await env.DB.prepare(
+          `SELECT video_id, CASE WHEN status = 'processing' AND updated_at < datetime('now', '-10 minutes') THEN 'stuck' ELSE status END AS status
+           FROM youtube_videos WHERE video_id IN (${placeholders})`
+        )
           .bind(...videos.map((v) => v.id))
-          .all<{ video_id: string }>()
-      ).results.map((r) => r.video_id)
+          .all<{ video_id: string; status: string }>()
+      ).results.map((r) => [r.video_id, r.status])
     )
-    const fresh = videos.filter((v) => !known.has(v.id)).reverse() // cũ trước, để bài đăng đúng thứ tự
+    // Video chưa có bài: chưa từng thấy, chỉ mới được ghi nhận "có sẵn", hoặc bị kẹt "đang xử lý" quá 10 phút.
+    // Giữ thứ tự của YouTube (mới nhất trước) → mỗi giờ đăng video mới nhất.
+    const fresh = videos.filter((v) => !known.has(v.id) || ['baseline', 'stuck'].includes(known.get(v.id)!))
 
     // Lần chạy đầu: chỉ ghi nhận các video đang có, không đăng hàng loạt
     if (!(await getSetting(env.DB, 'yt.baseline_done'))) {
@@ -166,8 +171,12 @@ export async function runYoutubeSync(env: Env, opts: { force?: boolean } = {}): 
 
     let done = 0
     for (const v of fresh) {
-      if (isCompilationTitle(v.title)) {
-        await env.DB.prepare("INSERT OR IGNORE INTO youtube_videos (video_id, title, status, note) VALUES (?, ?, 'skipped', 'Tiêu đề chỉ là ngày tháng (bản tổng hợp)')")
+      // Video kẹt đã được chọn đăng từ trước (kể cả bấm tay) → không lọc lại theo tiêu đề
+      if (known.get(v.id) !== 'stuck' && isCompilationTitle(v.title)) {
+        await env.DB.prepare(
+          `INSERT INTO youtube_videos (video_id, title, status, note) VALUES (?, ?, 'skipped', 'Tiêu đề chỉ là ngày tháng (bản tổng hợp)')
+           ON CONFLICT(video_id) DO UPDATE SET status = 'skipped', note = excluded.note, updated_at = datetime('now') WHERE status = 'baseline'`
+        )
           .bind(v.id, v.title)
           .run()
         result.skipped++
@@ -178,7 +187,11 @@ export async function runYoutubeSync(env: Env, opts: { force?: boolean } = {}): 
         continue
       }
       // Giành video trước khi làm, tránh hai lần chạy cùng lúc đăng trùng
-      const claim = await env.DB.prepare("INSERT OR IGNORE INTO youtube_videos (video_id, title, status) VALUES (?, ?, 'processing')")
+      const claim = await env.DB.prepare(
+        `INSERT INTO youtube_videos (video_id, title, status) VALUES (?, ?, 'processing')
+         ON CONFLICT(video_id) DO UPDATE SET status = 'processing', updated_at = datetime('now')
+           WHERE status = 'baseline' OR (status = 'processing' AND updated_at < datetime('now', '-10 minutes'))`
+      )
         .bind(v.id, v.title)
         .run()
       if (!claim.meta.changes) continue
