@@ -2,7 +2,9 @@ import { Hono } from 'hono'
 import { raw } from 'hono/html'
 import { marked } from 'marked'
 import { PostGrid, ProductGrid } from '../components/Cards'
-import { getPost, listPostProducts, listPosts } from '../lib/db'
+import type { Context } from 'hono'
+import { PER_PAGE, Pagination, pageHref, parsePage } from '../components/Pagination'
+import { getPost, listPostProducts, listPosts, listPostsPage } from '../lib/db'
 import { productsEnabled } from '../lib/site-config'
 import type { AppEnv } from '../types'
 import { mediaUrl, withMediaBase } from '../lib/format'
@@ -10,23 +12,40 @@ import { articleJsonLd, siteOrigin } from '../lib/seo'
 
 const app = new Hono<AppEnv>()
 
-app.get('/', async (c) => {
-  const posts = await listPosts(c.env.DB, 100)
+// /bai-viet (trang 1) và /bai-viet/trang/:n: tất cả bài, 10 bài mỗi trang
+async function postIndex(c: Context<AppEnv>) {
+  const base = '/bai-viet'
+  const page = parsePage(c.req.param('n'))
+  if (page === null) return c.notFound()
+  if (page === 1 && c.req.param('n')) return c.redirect(base, 301)
+
+  const { posts, total } = await listPostsPage(c.env.DB, page, PER_PAGE)
+  if (!posts.length && page > 1) return c.notFound()
+
+  const suffix = page > 1 ? `（${page}ページ目）` : ''
   return c.render(
     <>
-      <h1>記事一覧</h1>
+      <h1>
+        記事一覧
+        {suffix && <small class="pg-title">{suffix}</small>}
+      </h1>
       <PostGrid posts={posts} />
+      <Pagination base={base} page={page} total={total} />
     </>,
     {
-      title: '記事一覧',
+      title: '記事一覧' + suffix,
       description: `${c.get('site').name}の記事一覧です。`,
       breadcrumbs: [
         { name: 'ホーム', path: '/' },
-        { name: '記事一覧', path: '/bai-viet' },
+        { name: '記事一覧', path: base },
+        ...(page > 1 ? [{ name: `${page}ページ目`, path: pageHref(base, page) }] : []),
       ],
     }
   )
-})
+}
+
+app.get('/', postIndex)
+app.get('/trang/:n', postIndex)
 
 app.get('/:slug', async (c) => {
   const post = await getPost(c.env.DB, c.req.param('slug'))

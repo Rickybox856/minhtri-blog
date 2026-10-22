@@ -75,6 +75,26 @@ export async function listPosts(db: D1Database, limit = 20, category?: string): 
   return results
 }
 
+/** Một trang danh sách bài (trang bắt đầu từ 1) kèm tổng số bài để vẽ phân trang */
+export async function listPostsPage(
+  db: D1Database,
+  page: number,
+  perPage: number,
+  category?: string
+): Promise<{ posts: Post[]; total: number }> {
+  const where = category ? 'p.published = 1 AND p.category = ?' : 'p.published = 1'
+  const args = category ? [category] : []
+  const [rows, count] = await db.batch([
+    db
+      .prepare(
+        `SELECT ${POST_COLUMNS} FROM ${POST_FROM} WHERE ${where} ORDER BY p.published_at DESC, p.id DESC LIMIT ? OFFSET ?`
+      )
+      .bind(...args, perPage, (page - 1) * perPage),
+    db.prepare(`SELECT COUNT(*) AS n FROM posts p WHERE ${where}`).bind(...args),
+  ])
+  return { posts: rows.results as Post[], total: (count.results[0] as { n: number }).n }
+}
+
 export function getPost(db: D1Database, slug: string): Promise<PostWithContent | null> {
   return db
     .prepare(`SELECT ${POST_COLUMNS}, p.content_md, p.content_html FROM ${POST_FROM} WHERE p.slug = ? AND p.published = 1`)

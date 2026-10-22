@@ -289,3 +289,14 @@ section { margin-top: 64px; }
 .prose .audio-player { margin: 24px 0 28px; padding: 16px 18px; border: 1px solid var(--border); border-radius: 12px; background: #fffdf7; }
 .prose .audio-player p { margin: 0 0 10px; font-weight: 700; color: var(--honey-dark); }
 .prose .audio-player audio { display: block; width: 100%; }
+
+/* Phân trang danh sách bài */
+.pagination { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 6px; margin: 36px 0 12px; }
+.pagination a, .pagination span { min-width: 40px; padding: 8px 12px; border: 1px solid var(--border); border-radius: 8px; text-align: center; text-decoration: none; line-height: 1.2; }
+.pagination a:hover { background: #fbefd6; color: var(--honey-dark); }
+.pagination .current { background: var(--honey); border-color: var(--honey); color: #fff; font-weight: 700; }
+.pagination .disabled { opacity: 0.4; }
+.pagination .pg-gap { border: 0; min-width: 0; padding: 8px 2px; }
+.pagination .pg-info { flex-basis: 100%; margin: 10px 0 0; text-align: center; font-size: 0.88rem; color: var(--muted); }
+.pg-title { margin-left: 8px; font-size: 0.6em; font-weight: 600; color: var(--muted); }
+@media (max-width: 480px) { .pagination a, .pagination span { min-width: 36px; padding: 7px 9px; } }
