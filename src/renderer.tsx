@@ -46,6 +46,7 @@ export const renderer = jsxRenderer<AppEnv>(
         googleVerification={optionalEnv(c.env, 'GOOGLE_SITE_VERIFICATION') || site.google_verification}
         assetVersion={c.env.CF_VERSION_METADATA?.id.slice(0, 8) ?? 'dev'}
         nav={c.get('nav') ?? { postCategories: [], pages: [] }}
+        member={c.get('member') ?? null}
       >
         {children}
       </Layout>

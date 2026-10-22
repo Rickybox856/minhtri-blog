@@ -1,11 +1,19 @@
 import { Hono } from 'hono'
+import { isMemberOnlyMedia } from '../lib/members'
+import type { AppEnv } from '../types'
 
-const app = new Hono<{ Bindings: CloudflareBindings }>()
+const app = new Hono<AppEnv>()
 
-// Phục vụ ảnh từ R2: /media/<key>
+// Phục vụ ảnh/âm thanh từ R2: /media/<key>
 app.get('/*', async (c) => {
   const key = decodeURIComponent(new URL(c.req.url).pathname.replace(/^\/media\//, ''))
   if (!key) return c.notFound()
+
+  // File âm thanh chỉ dành cho thành viên đã đăng nhập
+  const memberOnly = isMemberOnlyMedia(key)
+  if (memberOnly && !c.get('member')) {
+    return c.text('会員限定のコンテンツです。ログインしてください。', 401, { 'Cache-Control': 'no-store' })
+  }
 
   const object = await c.env.MEDIA.get(key, {
     onlyIf: c.req.raw.headers,
@@ -16,7 +24,8 @@ app.get('/*', async (c) => {
   const headers = new Headers()
   object.writeHttpMetadata(headers)
   headers.set('ETag', object.httpEtag)
-  headers.set('Cache-Control', 'public, max-age=31536000, immutable')
+  // File của thành viên: chỉ trình duyệt của họ được giữ, không để bộ nhớ đệm dùng chung lưu lại
+  headers.set('Cache-Control', memberOnly ? 'private, max-age=86400' : 'public, max-age=31536000, immutable')
   headers.set('Accept-Ranges', 'bytes')
 
   if (!('body' in object)) {

@@ -1,5 +1,6 @@
 import type { MiddlewareHandler } from 'hono'
 import type { AppEnv } from '../types'
+import { hasMemberCookie } from './members'
 
 // Cache trang công khai ngay tại máy chủ Cloudflare (Cache API: miễn phí, không giới hạn ghi).
 //
@@ -19,11 +20,18 @@ export const BUMP_CACHE_VERSION_SQL = `INSERT INTO settings (key, value) VALUES 
 export const bumpCacheVersion = (db: D1Database) => db.prepare(BUMP_CACHE_VERSION_SQL).run()
 
 // Không cache: trang quản trị, link mua (phải đếm lượt bấm), ảnh (đã có cache riêng), link có ?tham-số
-const SKIP = /^\/(quan-tri|mua|media)(\/|$)/
+const SKIP = /^\/(quan-tri|mua|media|thanh-vien)(\/|$)/
 
 export const pageCache: MiddlewareHandler<AppEnv> = async (c, next) => {
   const url = new URL(c.req.url)
   if (c.req.method !== 'GET' || url.search || SKIP.test(url.pathname)) return next()
+
+  // Thành viên đã đăng nhập thấy trang riêng (trình phát mở khoá, nút マイページ): không dùng cache chung
+  if (hasMemberCookie(c)) {
+    await next()
+    if (/text\/html/.test(c.res.headers.get('Content-Type') ?? '')) c.res.headers.set('Cache-Control', 'private, no-store')
+    return
+  }
 
   const version = c.get('early').cacheVersion
   const deploy = c.env.CF_VERSION_METADATA?.id ?? 'dev'

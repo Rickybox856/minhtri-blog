@@ -5,6 +5,7 @@ import { PostGrid, ProductGrid } from '../components/Cards'
 import type { Context } from 'hono'
 import { PER_PAGE, Pagination, pageHref, parsePage } from '../components/Pagination'
 import { getPost, listPostProducts, listPosts, listPostsPage } from '../lib/db'
+import { hasMemberMedia, lockMemberMedia } from '../lib/members'
 import { productsEnabled } from '../lib/site-config'
 import type { AppEnv } from '../types'
 import { mediaUrl, withMediaBase } from '../lib/format'
@@ -66,6 +67,9 @@ app.get('/:slug', async (c) => {
       c.env.DB.prepare('UPDATE posts SET content_html = ? WHERE id = ?').bind(html, post.id).run()
     )
   }
+
+  // Khách chưa đăng nhập: thay trình phát âm thanh/video bằng khung mời đăng ký
+  if (!c.get('member') && hasMemberMedia(html)) html = lockMemberMedia(html, `/bai-viet/${post.slug}`)
 
   return c.render(
     <>

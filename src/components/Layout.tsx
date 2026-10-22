@@ -27,6 +27,8 @@ type Props = SeoProps & {
   /** Gắn vào link CSS để trình duyệt cache lâu dài, đổi mỗi lần deploy */
   assetVersion: string
   nav: SiteNav
+  /** Thành viên đang đăng nhập (null: khách) */
+  member?: { name: string } | null
   children?: Child
 }
 
@@ -113,6 +115,16 @@ export const Layout = (props: Props) => {
                   </a>
                 )
               })}
+              {!isAdmin &&
+                (props.member ? (
+                  <a href="/thanh-vien" class={`nav-member${path.startsWith('/thanh-vien') ? ' active' : ''}`}>
+                    マイページ
+                  </a>
+                ) : (
+                  <a href="/thanh-vien/dang-nhap" class={`nav-member${path.startsWith('/thanh-vien') ? ' active' : ''}`}>
+                    ログイン
+                  </a>
+                ))}
             </nav>
           </div>
         </header>

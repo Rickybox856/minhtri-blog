@@ -300,3 +300,23 @@ section { margin-top: 64px; }
 .pagination .pg-info { flex-basis: 100%; margin: 10px 0 0; text-align: center; font-size: 0.88rem; color: var(--muted); }
 .pg-title { margin-left: 8px; font-size: 0.6em; font-weight: 600; color: var(--muted); }
 @media (max-width: 480px) { .pagination a, .pagination span { min-width: 36px; padding: 7px 9px; } }
+
+/* Thành viên: khung khoá trình phát, form đăng ký/đăng nhập */
+.prose .member-lock { margin: 24px 0 28px; padding: 22px 20px; border: 2px dashed var(--honey); border-radius: 12px; background: #fffdf7; text-align: center; }
+.prose .member-lock p { margin: 0 0 10px; }
+.prose .member-lock .member-lock-title { font-size: 1.1rem; font-weight: 700; color: var(--honey-dark); }
+.prose .member-lock-actions { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin-top: 14px !important; }
+.prose .member-lock .btn { color: #fff; font-weight: 700; }
+.prose .member-lock .btn-outline { color: var(--honey-dark); }
+.prose .member-lock .btn-outline:hover { color: #fff; }
+.member-box { max-width: 440px; }
+.member-box .lead { font-size: 0.95rem; }
+.member-box h2 { margin-top: 32px; font-size: 1.15rem; }
+.member-switch { margin-top: 16px; text-align: center; }
+.member-links { display: flex; flex-wrap: wrap; gap: 10px; }
+.member-logout { margin-top: 28px; }
+.form .hp { position: absolute; left: -9999px; width: 1px; height: 1px; overflow: hidden; }
+.main-nav .nav-member { border: 1px solid var(--honey); }
+.admin-search { display: flex; gap: 8px; margin: 0 0 16px; max-width: 480px; }
+.admin-search input { flex: 1; font: inherit; padding: 8px 10px; border: 1px solid var(--border); border-radius: 8px; }
+.temp-pass { font-size: 1.1rem; padding: 2px 8px; background: #fff; border: 1px solid var(--border); border-radius: 6px; user-select: all; }

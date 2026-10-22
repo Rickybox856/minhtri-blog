@@ -4,6 +4,7 @@ import { listNavCategories, listPosts, listPublishedPages, recordProductClick } 
 import { getSetting } from './lib/auth'
 import { loadEarlySettings } from './lib/early-settings'
 import { mediaUrl } from './lib/format'
+import { loadMember } from './lib/members'
 import { pageCache } from './lib/page-cache'
 import { isoDate, siteOrigin } from './lib/seo'
 import { loadNav, renderer } from './renderer'
@@ -11,6 +12,7 @@ import admin from './routes/admin'
 import blog from './routes/blog'
 import contact from './routes/contact'
 import media from './routes/media'
+import members from './routes/members'
 import pages from './routes/pages'
 import staticPages from './routes/static-pages'
 import topics from './routes/topics'
@@ -51,6 +53,8 @@ app.use(async (c, next) => {
 })
 
 app.use(pageCache)
+// Thành viên đang đăng nhập (chỉ truy vấn DB khi có cookie)
+app.use(loadMember)
 app.route('/media', media)
 
 // Link mua sản phẩm: đếm lượt bấm rồi chuyển sang trang bán hàng
@@ -72,7 +76,7 @@ app.get('/favicon.ico', async (c) => {
 // robots.txt sinh theo địa chỉ site để dùng được cho mọi tên miền
 app.get('/robots.txt', (c) =>
   c.text(
-    `User-agent: *\nAllow: /\nDisallow: /mua/\nDisallow: /quan-tri/\n\nSitemap: ${siteOrigin(c)}/sitemap.xml\n`
+    `User-agent: *\nAllow: /\nDisallow: /mua/\nDisallow: /quan-tri/\nDisallow: /thanh-vien/\n\nSitemap: ${siteOrigin(c)}/sitemap.xml\n`
   )
 )
 
@@ -109,6 +113,7 @@ app.route('/', pages)
 app.route('/bai-viet', blog)
 app.route('/chu-de', topics)
 app.route('/lien-he', contact)
+app.route('/thanh-vien', members)
 app.route('/quan-tri', admin)
 // Trang tĩnh /<slug> đăng ký sau cùng
 app.route('/', staticPages)
