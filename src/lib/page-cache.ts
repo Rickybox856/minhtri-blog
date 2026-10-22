@@ -20,7 +20,8 @@ export const BUMP_CACHE_VERSION_SQL = `INSERT INTO settings (key, value) VALUES 
 export const bumpCacheVersion = (db: D1Database) => db.prepare(BUMP_CACHE_VERSION_SQL).run()
 
 // Không cache: trang quản trị, link mua (phải đếm lượt bấm), ảnh (đã có cache riêng), link có ?tham-số
-const SKIP = /^\/(quan-tri|mua|media|thanh-vien)(\/|$)/
+// Diễn đàn đổi liên tục theo bài đăng mới nên không cache
+const SKIP = /^\/(quan-tri|mua|media|thanh-vien|dien-dan)(\/|$)/
 
 export const pageCache: MiddlewareHandler<AppEnv> = async (c, next) => {
   const url = new URL(c.req.url)

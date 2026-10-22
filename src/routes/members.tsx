@@ -1,6 +1,7 @@
 import { Hono } from 'hono'
 import type { Context } from 'hono'
 import { hashPassword, verifyPassword } from '../lib/auth'
+import { nicknameError } from '../lib/forum'
 import { MIN_PASSWORD, endMemberSession, safeNext, startMemberSession } from '../lib/members'
 import type { AppEnv } from '../types'
 
@@ -162,7 +163,15 @@ app.post('/dang-xuat', async (c) => {
 
 // --- Trang của tôi ---
 
-const MyPage = (p: { email: string; name: string; error?: string; ok?: boolean }) => (
+const MyPage = (p: {
+  email: string
+  name: string
+  nickname: string | null
+  error?: string
+  ok?: boolean
+  nickError?: string
+  nickOk?: boolean
+}) => (
   <section class="login-box member-box">
     <h1>マイページ</h1>
     <p>
@@ -172,7 +181,22 @@ const MyPage = (p: { email: string; name: string; error?: string; ok?: boolean }
     <p class="member-links">
       <a class="btn" href="/chu-de/am-thanh">🎧 音声を聴く</a>
       <a class="btn" href="/chu-de/dong-video">▶ 動画を見る</a>
+      <a class="btn" href="/dien-dan">💬 相談広場</a>
     </p>
+
+    <h2>相談広場のニックネーム</h2>
+    {p.nickOk && <p class="notice success">ニックネームを保存しました。</p>}
+    {p.nickError && <p class="notice error">{p.nickError}</p>}
+    <form method="post" action={`${BASE}/biet-danh`} class="form">
+      <Field
+        label="ニックネーム（2〜20文字）"
+        name="nickname"
+        value={p.nickname ?? ''}
+        auto="nickname"
+        note="相談広場で表示される名前です。メールアドレスは表示されません。"
+      />
+      <button class="btn" type="submit">保存する</button>
+    </form>
 
     <h2>パスワードの変更</h2>
     {p.ok && <p class="notice success">パスワードを変更しました。</p>}
@@ -193,7 +217,26 @@ const MyPage = (p: { email: string; name: string; error?: string; ok?: boolean }
 app.get('/', (c) => {
   const m = c.get('member')
   if (!m) return c.redirect(`${BASE}/dang-nhap`)
-  return c.render(<MyPage email={m.email} name={m.name} ok={c.req.query('ok') === '1'} />, seo('マイページ'))
+  return c.render(
+    <MyPage email={m.email} name={m.name} nickname={m.nickname} ok={c.req.query('ok') === '1'} nickOk={c.req.query('ok') === 'nick'} />,
+    seo('マイページ')
+  )
+})
+
+app.post('/biet-danh', async (c) => {
+  const m = c.get('member')
+  if (!m) return c.redirect(`${BASE}/dang-nhap`, 303)
+  const nick = String((await c.req.parseBody()).nickname ?? '').trim()
+  const fail = (nickError: string) => {
+    c.status(400)
+    return c.render(<MyPage email={m.email} name={m.name} nickname={nick} nickError={nickError} />, seo('マイページ'))
+  }
+  const err = nicknameError(nick)
+  if (err) return fail(err)
+  const taken = await c.env.DB.prepare('SELECT 1 FROM members WHERE nickname = ? COLLATE NOCASE AND id != ?').bind(nick, m.id).first()
+  if (taken) return fail('このニックネームはすでに使われています。別のニックネームをお選びください。')
+  await c.env.DB.prepare('UPDATE members SET nickname = ? WHERE id = ?').bind(nick, m.id).run()
+  return c.redirect(`${BASE}?ok=nick`, 303)
 })
 
 app.post('/doi-mat-khau', async (c) => {
@@ -203,7 +246,7 @@ app.post('/doi-mat-khau', async (c) => {
   const password = String(form.password ?? '')
   const fail = (error: string) => {
     c.status(400)
-    return c.render(<MyPage email={m.email} name={m.name} error={error} />, seo('マイページ'))
+    return c.render(<MyPage email={m.email} name={m.name} nickname={m.nickname} error={error} />, seo('マイページ'))
   }
   const row = await c.env.DB.prepare('SELECT password_hash FROM members WHERE id = ?').bind(m.id).first<{ password_hash: string }>()
   if (!row || !(await verifyPassword(String(form.current ?? ''), row.password_hash))) return fail('現在のパスワードが正しくありません。')

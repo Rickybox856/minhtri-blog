@@ -38,6 +38,7 @@ const menuItems = (nav: SiteNav, site: SiteConfig) => [
   ...nav.postCategories.map((c) => ({ href: `/chu-de/${c.slug}`, label: c.name })),
   ...(productsEnabled(site) ? [{ href: '/san-pham', label: '商品' }] : []),
   ...nav.pages.filter((p) => p.show_in_menu).map((p) => ({ href: `/${p.slug}`, label: p.title })),
+  { href: '/dien-dan', label: '相談広場' },
   { href: '/lien-he', label: 'お問い合わせ' },
 ]
 

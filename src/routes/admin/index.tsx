@@ -10,6 +10,7 @@ import postCategoriesAdmin from './post-categories'
 import postsAdmin from './posts'
 import productCategoriesAdmin from './product-categories'
 import mediaAdmin from './media'
+import forumAdmin from './forum'
 import membersAdmin from './members'
 import productsAdmin from './products'
 import settingsAdmin from './settings'
@@ -279,5 +280,6 @@ app.route('/trang', pagesAdmin)
 app.route('/anh', mediaAdmin)
 app.route('/cai-dat', settingsAdmin)
 app.route('/thanh-vien', membersAdmin)
+app.route('/dien-dan', forumAdmin)
 
 export default app

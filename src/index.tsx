@@ -3,6 +3,7 @@ import { secureHeaders } from 'hono/secure-headers'
 import { listNavCategories, listPosts, listPublishedPages, recordProductClick } from './lib/db'
 import { getSetting } from './lib/auth'
 import { loadEarlySettings } from './lib/early-settings'
+import { listBoards, listThreadsForSitemap } from './lib/forum'
 import { mediaUrl } from './lib/format'
 import { loadMember } from './lib/members'
 import { pageCache } from './lib/page-cache'
@@ -11,6 +12,7 @@ import { loadNav, renderer } from './renderer'
 import admin from './routes/admin'
 import blog from './routes/blog'
 import contact from './routes/contact'
+import forum from './routes/forum'
 import media from './routes/media'
 import members from './routes/members'
 import pages from './routes/pages'
@@ -82,11 +84,13 @@ app.get('/robots.txt', (c) =>
 
 app.get('/sitemap.xml', async (c) => {
   const base = siteOrigin(c)
-  const [posts, categories, staticList, productsSetting] = await Promise.all([
+  const [posts, categories, staticList, productsSetting, boards, threads] = await Promise.all([
     listPosts(c.env.DB, 5000),
     listNavCategories(c.env.DB),
     listPublishedPages(c.env.DB),
     getSetting(c.env.DB, 'site.products_enabled'),
+    listBoards(c.env.DB),
+    listThreadsForSitemap(c.env.DB),
   ])
   const entries: { path: string; lastmod?: string }[] = [
     { path: '/' },
@@ -96,6 +100,9 @@ app.get('/sitemap.xml', async (c) => {
     ...staticList.map((p) => ({ path: `/${p.slug}`, lastmod: isoDate(p.updated_at) })),
     { path: '/lien-he' },
     ...posts.map((p) => ({ path: `/bai-viet/${p.slug}`, lastmod: isoDate(p.updated_at) })),
+    { path: '/dien-dan' },
+    ...boards.map((b) => ({ path: `/dien-dan/${b.slug}` })),
+    ...threads.map((t) => ({ path: `/dien-dan/chu-de/${t.id}`, lastmod: isoDate(t.last_post_at) })),
   ]
   const body =
     '<?xml version="1.0" encoding="UTF-8"?>\n' +
@@ -114,6 +121,7 @@ app.route('/bai-viet', blog)
 app.route('/chu-de', topics)
 app.route('/lien-he', contact)
 app.route('/thanh-vien', members)
+app.route('/dien-dan', forum)
 app.route('/quan-tri', admin)
 // Trang tĩnh /<slug> đăng ký sau cùng
 app.route('/', staticPages)

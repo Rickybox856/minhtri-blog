@@ -7,7 +7,7 @@ import { AdminShell, Badge, DeleteButton } from './ui'
 const app = new Hono<{ Bindings: CloudflareBindings }>()
 const BASE = '/quan-tri/thanh-vien'
 
-type Row = { id: number; email: string; name: string; disabled: number; created_at: string; last_login_at: string | null }
+type Row = { id: number; email: string; name: string; nickname: string | null; disabled: number; created_at: string; last_login_at: string | null }
 
 // Mật khẩu tạm dễ đọc (bỏ các ký tự dễ nhầm như 0/O, 1/l)
 function tempPassword() {
@@ -17,9 +17,9 @@ function tempPassword() {
 
 app.get('/', async (c) => {
   const q = (c.req.query('q') ?? '').trim()
-  const where = q ? 'WHERE email LIKE ?1 OR name LIKE ?1' : ''
+  const where = q ? 'WHERE email LIKE ?1 OR name LIKE ?1 OR nickname LIKE ?1' : ''
   const stmt = c.env.DB.prepare(
-    `SELECT id, email, name, disabled, created_at, last_login_at FROM members ${where} ORDER BY id DESC LIMIT 500`
+    `SELECT id, email, name, nickname, disabled, created_at, last_login_at FROM members ${where} ORDER BY id DESC LIMIT 500`
   )
   const [{ results }, total] = await Promise.all([
     (q ? stmt.bind(`%${q}%`) : stmt).all<Row>(),
@@ -51,6 +51,7 @@ app.get('/', async (c) => {
               <td>
                 <strong>{m.email}</strong>
                 {m.name && <div class="muted">{m.name}</div>}
+                {m.nickname && <div class="muted">Biệt danh: {m.nickname}</div>}
               </td>
               <td>
                 <Badge on={!m.disabled} yes="Hoạt động" no="Đã khoá" />

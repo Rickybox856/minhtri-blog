@@ -9,7 +9,7 @@ export const MEMBER_COOKIE = 'mb_session'
 const SESSION_DAYS = 30
 export const MIN_PASSWORD = 8
 
-export type Member = { id: number; email: string; name: string }
+export type Member = { id: number; email: string; name: string; nickname: string | null }
 
 const toHex = (buf: ArrayBuffer) => [...new Uint8Array(buf)].map((b) => b.toString(16).padStart(2, '0')).join('')
 const sha256 = async (s: string) => toHex(await crypto.subtle.digest('SHA-256', new TextEncoder().encode(s)))
@@ -24,7 +24,7 @@ export const loadMember: MiddlewareHandler<AppEnv> = async (c, next) => {
   let member: Member | null = null
   if (token) {
     member = await c.env.DB.prepare(
-      `SELECT m.id, m.email, m.name FROM member_sessions s JOIN members m ON m.id = s.member_id
+      `SELECT m.id, m.email, m.name, m.nickname FROM member_sessions s JOIN members m ON m.id = s.member_id
        WHERE s.token_hash = ? AND s.expires_at > datetime('now') AND m.disabled = 0`
     )
       .bind(await sha256(token))

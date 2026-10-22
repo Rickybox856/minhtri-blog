@@ -22,8 +22,18 @@ function pageNumbers(current: number, last: number): (number | '…')[] {
   return out
 }
 
-export const Pagination = ({ base, page, total }: { base: string; page: number; total: number }) => {
-  const last = Math.ceil(total / PER_PAGE)
+export const Pagination = ({
+  base,
+  page,
+  total,
+  perPage = PER_PAGE,
+}: {
+  base: string
+  page: number
+  total: number
+  perPage?: number
+}) => {
+  const last = Math.ceil(total / perPage)
   if (last <= 1) return null
   return (
     <nav class="pagination" aria-label="ページ送り">
@@ -47,7 +57,7 @@ export const Pagination = ({ base, page, total }: { base: string; page: number; 
         <span class="pg-next disabled">次へ ›</span>
       )}
       <p class="pg-info">
-        全{total}件中 {(page - 1) * PER_PAGE + 1}〜{Math.min(page * PER_PAGE, total)}件を表示（{page}/{last}ページ）
+        全{total}件中 {(page - 1) * perPage + 1}〜{Math.min(page * perPage, total)}件を表示（{page}/{last}ページ）
       </p>
     </nav>
   )
