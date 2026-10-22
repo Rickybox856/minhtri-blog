@@ -16,6 +16,7 @@ import contact from './routes/contact'
 import forum from './routes/forum'
 import media from './routes/media'
 import members from './routes/members'
+import oauth from './routes/oauth'
 import pages from './routes/pages'
 import staticPages from './routes/static-pages'
 import topics from './routes/topics'
@@ -59,6 +60,7 @@ app.use(pageCache)
 // Thành viên đang đăng nhập (chỉ truy vấn DB khi có cookie)
 app.use(loadMember)
 app.route('/media', media)
+app.route('/oauth', oauth)
 
 // Link mua sản phẩm: đếm lượt bấm rồi chuyển sang trang bán hàng
 app.get('/mua/:slug', async (c) => {
@@ -79,7 +81,7 @@ app.get('/favicon.ico', async (c) => {
 // robots.txt sinh theo địa chỉ site để dùng được cho mọi tên miền
 app.get('/robots.txt', (c) =>
   c.text(
-    `User-agent: *\nAllow: /\nDisallow: /mua/\nDisallow: /quan-tri/\nDisallow: /thanh-vien/\n\nSitemap: ${siteOrigin(c)}/sitemap.xml\n`
+    `User-agent: *\nAllow: /\nDisallow: /mua/\nDisallow: /quan-tri/\nDisallow: /thanh-vien/\nDisallow: /oauth/\n\nSitemap: ${siteOrigin(c)}/sitemap.xml\n`
   )
 )
 

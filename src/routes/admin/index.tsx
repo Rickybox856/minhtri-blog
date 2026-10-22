@@ -13,6 +13,7 @@ import mediaAdmin from './media'
 import forumAdmin from './forum'
 import forumBoardsAdmin from './forum-boards'
 import youtubeAdmin from './youtube'
+import ytChannelsAdmin from './yt-channels'
 import membersAdmin from './members'
 import productsAdmin from './products'
 import settingsAdmin from './settings'
@@ -285,5 +286,6 @@ app.route('/thanh-vien', membersAdmin)
 app.route('/dien-dan', forumAdmin)
 app.route('/chuyen-muc-dien-dan', forumBoardsAdmin)
 app.route('/youtube', youtubeAdmin)
+app.route('/kenh-youtube', ytChannelsAdmin)
 
 export default app

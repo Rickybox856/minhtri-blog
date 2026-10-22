@@ -210,6 +210,27 @@ function pick<T>(arr: T[], n: number, seed: number) {
 const md = (s: string) => s.replace(/[&<>]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' })[c]!).replace(/([*_`[\]\\])/g, '\\$1')
 const attr = (s: string) => s.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]!)
 
+/** Phân tích tiêu đề: phần chính, người tư vấn (kèm vai trò), câu trích, chủ đề (khớp nhiều từ khoá nhất trước) */
+export function analyzeTitle(raw: string) {
+  const { core, people } = splitPeople(stripPrefix(raw))
+  const quote = core.match(/「([^」]{3,40})」/)?.[1]
+  const score = (t: Topic) => core.match(new RegExp(t.re.source, 'g'))?.length ?? 0
+  const topics = TOPICS.map((t) => ({ t, n: score(t) }))
+    .filter((x) => x.n > 0)
+    .sort((a, b) => b.n - a.n)
+    .map((x) => x.t)
+  return {
+    core,
+    quote,
+    people: people.map((name) => ({ name, role: PEOPLE[name] })),
+    topic: topics[0] ?? GENERAL,
+    second: topics[1],
+    seed: hash(raw),
+  }
+}
+export { pick as pickVariants }
+export type { Topic }
+
 export function videoSlug(id: string, date = new Date()) {
   const d = date.toISOString().slice(0, 10).replace(/-/g, '')
   return `video-${d}-${id.toLowerCase().replace(/[^a-z0-9]/g, '')}`

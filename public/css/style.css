@@ -374,3 +374,37 @@ section { margin-top: 64px; }
 .yt-actions { margin: 12px 0 20px; }
 .yt-settings { margin-bottom: 28px; }
 .yt-test { display: block; margin: -12px 0 24px; }
+
+/* Quản lý kênh YouTube */
+.yt-channel-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 12px; margin: 12px 0; }
+.yt-channel { display: flex; align-items: center; gap: 12px; padding: 12px 14px; text-decoration: none; color: inherit; }
+.yt-channel img { border-radius: 50%; }
+.yt-channel span { display: grid; gap: 4px; }
+.yt-guide { margin: 8px 0 16px; padding: 12px 16px; border: 1px solid var(--border); border-radius: 10px; background: #fffdf7; }
+.yt-guide summary { cursor: pointer; font-weight: 700; }
+.yt-guide li { margin: 6px 0; line-height: 1.7; }
+.yt-note { margin-top: 20px; font-size: 0.9rem; line-height: 1.7; }
+.yt-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin: 8px 0 20px; }
+.yt-stats .card { display: grid; padding: 14px; text-align: center; }
+.yt-stats strong { font-size: 1.5rem; color: var(--honey-dark); }
+.yt-stats span { font-size: 0.85rem; color: var(--muted); }
+.yt-videos img { display: block; border-radius: 6px; }
+.seo-score { display: inline-block; min-width: 2.4em; padding: 2px 8px; border-radius: 999px; text-align: center; font-weight: 700; color: #fff; }
+.seo-score.good { background: #2e7d32; }
+.seo-score.mid { background: #c77d00; }
+.seo-score.bad { background: #c0392b; }
+.yt-form { max-width: 820px; }
+.yt-form textarea { font: inherit; line-height: 1.6; }
+.yt-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.yt-suggest-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+.yt-title-options { display: grid; gap: 6px; }
+.yt-title-options p { margin: 0; }
+.yt-title-option { text-align: left; font: inherit; padding: 8px 10px; border: 1px dashed var(--honey); border-radius: 8px; background: #fffdf7; cursor: pointer; }
+.yt-title-option:hover { background: #fbefd6; }
+.seo-panel { padding: 12px 16px; border: 1px solid var(--border); border-radius: 10px; background: #fff; }
+.seo-panel h3 { margin: 0 0 8px; font-size: 1rem; }
+.seo-panel ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; font-size: 0.9rem; }
+.seo-panel small { color: var(--muted); }
+.yt-progress { display: flex; align-items: center; gap: 10px; }
+.yt-progress progress { flex: 1; height: 18px; }
+@media (max-width: 640px) { .yt-stats, .yt-row { grid-template-columns: 1fr; } }
