@@ -1,5 +1,7 @@
 import { Hono } from 'hono'
 import { formatDateTime } from '../../lib/forum'
+import { publishScheduled } from '../../lib/forum-schedule'
+import type { ScheduledRow } from '../../lib/forum-schedule'
 import { AdminShell, Badge } from './ui'
 
 // /quan-tri/dien-dan: kiểm duyệt diễn đàn (bài bị báo cáo / bị ẩn, bài mới), ẩn – hiện – xoá
@@ -68,7 +70,8 @@ app.get('/', async (c) => {
       </p>
       <p class="admin-tabs">
         <a href={BASE} class={tab === 'can-xem' ? 'btn' : 'btn btn-outline'}>Cần xem ({pending?.n ?? 0})</a>{' '}
-        <a href={`${BASE}?xem=moi`} class={tab === 'moi' ? 'btn' : 'btn btn-outline'}>Bài mới nhất</a>
+        <a href={`${BASE}?xem=moi`} class={tab === 'moi' ? 'btn' : 'btn btn-outline'}>Bài mới nhất</a>{' '}
+        <a href={`${BASE}/lich`} class="btn btn-outline">Lịch đăng bài</a>
       </p>
       {!results.length && <p class="muted">{tab === 'moi' ? 'Chưa có bài nào.' : 'Không có bài nào cần xem. 👍'}</p>}
       <div class="forum-mod-list">
@@ -111,6 +114,82 @@ app.get('/', async (c) => {
 })
 
 const TABLES = { thread: 'forum_threads', reply: 'forum_replies' } as const
+
+// --- Lịch đăng bài viết sẵn (相談広場スタッフ) ---
+app.get('/lich', async (c) => {
+  const { results } = await c.env.DB.prepare(
+    'SELECT * FROM forum_scheduled ORDER BY thread_id IS NOT NULL, publish_at, id LIMIT 300'
+  ).all<ScheduledRow>()
+  const waiting = results.filter((r) => r.thread_id === null)
+  const done = results.filter((r) => r.thread_id !== null)
+  const last = waiting[waiting.length - 1]
+  return c.render(
+    <AdminShell title="Diễn đàn: lịch đăng bài" active={BASE} flash={c.req.query('ok')}>
+      <p class="lead">
+        Bài viết sẵn tự đăng lên diễn đàn dưới tên <strong>相談広場スタッフ</strong> khi đến giờ (kiểm tra mỗi giờ). Còn{' '}
+        <strong>{waiting.length}</strong> bài chờ{last && <>, bài cuối đăng lúc {formatDateTime(last.publish_at)} (giờ Nhật)</>}.
+      </p>
+      <p>
+        <a href={BASE}>← Quay lại kiểm duyệt</a>
+      </p>
+      <h2>Chờ đăng</h2>
+      {!waiting.length && <p class="muted">Hết bài chờ — nhờ Claude viết thêm nhé.</p>}
+      <table class="admin-table">
+        <tbody>
+          {waiting.map((r) => (
+            <tr>
+              <td>
+                <strong>{r.title}</strong>
+                <div class="muted">
+                  {r.board_slug} · {r.body.length} chữ
+                </div>
+              </td>
+              <td>{formatDateTime(r.publish_at)}</td>
+              <td class="row-actions">
+                <form method="post" action={`${BASE}/lich/${r.id}/dang`} class="inline-form">
+                  <button class="btn btn-outline" type="submit">Đăng ngay</button>
+                </form>{' '}
+                <form method="post" action={`${BASE}/lich/${r.id}/xoa`} class="inline-form" onsubmit="return confirm('Xoá bài chờ này?')">
+                  <button class="btn btn-danger" type="submit">Xoá</button>
+                </form>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+      {done.length > 0 && (
+        <>
+          <h2>Đã đăng</h2>
+          <ul>
+            {done.map((r) => (
+              <li>
+                {r.thread_id ? (
+                  <a href={`/dien-dan/chu-de/${r.thread_id}`} target="_blank" rel="noopener">
+                    {r.title}
+                  </a>
+                ) : (
+                  <>{r.title} (đang đăng…)</>
+                )}
+              </li>
+            ))}
+          </ul>
+        </>
+      )}
+    </AdminShell>,
+    { title: 'Quản trị: Lịch đăng diễn đàn', noindex: true }
+  )
+})
+
+app.post('/lich/:id/:action', async (c) => {
+  const id = Number(c.req.param('id'))
+  const row = await c.env.DB.prepare('SELECT * FROM forum_scheduled WHERE id = ? AND thread_id IS NULL').bind(id).first<ScheduledRow>()
+  if (!row) return c.redirect(`${BASE}/lich`, 303)
+  const action = c.req.param('action')
+  if (action === 'xoa') await c.env.DB.prepare('DELETE FROM forum_scheduled WHERE id = ? AND thread_id IS NULL').bind(id).run()
+  else if (action === 'dang') await publishScheduled(c.env.DB, row)
+  else return c.notFound()
+  return c.redirect(`${BASE}/lich?ok=saved`, 303)
+})
 
 app.post('/:type/:id/:action', async (c) => {
   const table = TABLES[c.req.param('type') as keyof typeof TABLES]

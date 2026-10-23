@@ -5,6 +5,7 @@ import { getSetting } from './lib/auth'
 import { loadEarlySettings } from './lib/early-settings'
 import { listBoards, listThreadsForSitemap } from './lib/forum'
 import { runYoutubeSync } from './lib/youtube-sync'
+import { runForumSchedule } from './lib/forum-schedule'
 import { runAutoSchedule } from './lib/yt-autoschedule'
 import type { GEnv } from './lib/google'
 import { mediaUrl } from './lib/format'
@@ -157,6 +158,9 @@ export default {
         await runAutoSchedule(env as unknown as GEnv)
           .then((r) => console.log('yt-autoschedule', JSON.stringify(r)))
           .catch((e) => console.error('yt-autoschedule', e))
+        await runForumSchedule(env)
+          .then((r) => console.log('forum-schedule', JSON.stringify(r)))
+          .catch((e) => console.error('forum-schedule', e))
       })()
     )
   },
