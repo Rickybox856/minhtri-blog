@@ -479,3 +479,7 @@ section { margin-top: 64px; }
   .footer-grid > div:first-child { max-width: 640px; }
 }
 @media (min-width: 1600px) { .with-sidebar { grid-template-columns: minmax(0, 1fr) 380px; gap: 64px; } }
+@media (min-width: 1400px) {
+  .hero-image img { aspect-ratio: 16 / 9; }
+  .featured-image { aspect-ratio: 16 / 9; max-height: 480px; }
+}
