@@ -10,10 +10,11 @@ import { AdminShell, Badge } from './ui'
 const app = new Hono<{ Bindings: CloudflareBindings }>()
 const BASE = '/quan-tri/youtube'
 
-type Row = { video_id: string; title: string; status: string; post_slug: string | null; note: string; created_at: string; updated_at: string }
+type Row = { video_id: string; title: string; status: string; post_slug: string | null; note: string; created_at: string; updated_at: string; scheduled_at: string | null }
 
 const STATUS: Record<string, string> = {
   posted: 'Đã đăng bài',
+  queued: 'Chờ đăng',
   skipped: 'Bỏ qua',
   baseline: 'Có từ trước',
   processing: 'Đang xử lý',
@@ -29,8 +30,9 @@ const RunSummary = ({ r }: { r: SyncResult }) => (
     {r.baseline > 0 && <> · ghi nhận {r.baseline} video có sẵn (lần đầu, không đăng)</>}
     {r.posted.length > 0 && <> · <strong>đăng {r.posted.length} bài mới</strong></>}
     {r.skipped > 0 && <> · bỏ qua {r.skipped} bản tổng hợp</>}
-    {r.pending > 0 && <> · còn {r.pending} video chờ lần sau</>}
-    {!r.error && !r.posted.length && !r.baseline && <> · không có video mới</>}
+    {(r.queued ?? 0) > 0 && <> · thêm {r.queued} video vào hàng chờ</>}
+    {r.pending > 0 && <> · hàng chờ còn {r.pending} video{r.next && <>, bài tiếp theo lúc {formatDateTime(r.next)}</>}</>}
+    {!r.error && !r.posted.length && !r.baseline && !r.queued && !r.pending && <> · không có video mới</>}
     {r.error && <> · Lỗi: {r.error}</>}
   </p>
 )
@@ -50,8 +52,8 @@ app.get('/', async (c) => {
   return c.render(
     <AdminShell title="Theo dõi YouTube" active={BASE}>
       <p class="lead">
-        Mỗi giờ trang tự kiểm tra kênh YouTube. Video mới (trừ bản tổng hợp chỉ ghi ngày tháng) được tự viết bài giới thiệu theo mẫu
-        và đăng ngay vào chuyên mục <a href="/chu-de/dong-video" target="_blank" rel="noopener">動画</a>. Bạn sửa/ẩn bài trong mục
+        Mỗi giờ trang tự kiểm tra kênh YouTube. Video mới (trừ bản tổng hợp chỉ ghi ngày tháng) được đưa vào hàng chờ và xếp lịch
+        đăng <strong>cách nhau 2 tiếng</strong>; đến giờ thì tự viết bài giới thiệu theo mẫu và đăng vào chuyên mục <a href="/chu-de/dong-video" target="_blank" rel="noopener">動画</a>. Bạn sửa/ẩn bài trong mục
         Bài viết như bình thường.
       </p>
       <p class="notice">
@@ -74,7 +76,7 @@ app.get('/', async (c) => {
 
       <form method="post" action={`${BASE}/cai-dat`} class="form yt-settings">
         <label class="checkbox">
-          <input type="checkbox" name="enabled" checked={enabled} /> Tự động kiểm tra mỗi giờ và đăng 1 bài cho video mới nhất chưa có bài
+          <input type="checkbox" name="enabled" checked={enabled} /> Tự động kiểm tra mỗi giờ, xếp lịch đăng bài cho video mới (cách nhau 2 tiếng)
         </label>
         <label>
           Mã kênh YouTube (bắt đầu bằng UC…)
@@ -123,6 +125,7 @@ app.get('/', async (c) => {
             <th>Video</th>
             <th>Trạng thái</th>
             <th>Thấy lúc</th>
+            <th>Lịch đăng</th>
             <th></th>
           </tr>
         </thead>
@@ -139,6 +142,7 @@ app.get('/', async (c) => {
                 <Badge on={v.status === 'posted'} yes={STATUS.posted} no={STATUS[v.status] ?? v.status} />
               </td>
               <td>{formatDateTime(v.created_at)}</td>
+              <td>{v.status === 'queued' && v.scheduled_at ? formatDateTime(v.scheduled_at) : ''}</td>
               <td class="row-actions">
                 {v.status === 'posted' && v.post_slug ? (
                   <a href={`/bai-viet/${v.post_slug}`} target="_blank" rel="noopener">
@@ -147,7 +151,7 @@ app.get('/', async (c) => {
                 ) : (
                   <form method="post" action={`${BASE}/dang/${v.video_id}`} class="inline-form">
                     <button class="btn btn-outline" type="submit">
-                      {v.status === 'error' || v.status === 'processing' ? 'Thử lại' : 'Đăng bài'}
+                      {v.status === 'error' || v.status === 'processing' ? 'Thử lại' : v.status === 'queued' ? 'Đăng ngay' : 'Đăng bài'}
                     </button>
                   </form>
                 )}

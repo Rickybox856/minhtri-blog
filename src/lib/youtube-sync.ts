@@ -8,12 +8,13 @@ import { fetchChannelVideos, fetchChannelVideosApi, fetchThumbnail } from './you
 import type { ChannelVideo } from './youtube'
 
 // Theo dõi kênh YouTube: chạy mỗi giờ (Cron Trigger) hoặc khi bấm "Kiểm tra ngay" trong quản trị.
-// Video mới → tạo bài giới thiệu từ mẫu, đăng ngay vào chuyên mục 動画.
+// Video mới → vào hàng chờ, mỗi video được xếp một giờ đăng cách nhau GAP_HOURS tiếng;
+// đến giờ thì tạo bài giới thiệu từ mẫu và đăng vào chuyên mục 動画.
 
 export const DEFAULT_CHANNEL = 'UCIhJnsL-r9Br9QT7M3wqfVA'
 const CATEGORY = 'dong-video'
 const PRODUCTS = ['radio-book', 'radio-book2']
-const MAX_PER_RUN = 1 // mỗi giờ đăng 1 bài cho video mới nhất chưa có bài; video còn lại để các giờ sau
+const GAP_HOURS = 2 // khoảng cách giữa hai bài video tự đăng
 
 // YOUTUBE_API_KEY: secret của Worker (tuỳ chọn); nếu không có thì dùng key lưu trong trang quản trị.
 // CACHE + TOKEN_ENC_KEY: để dùng kết nối Google của kênh đã liên kết khi không có API key.
@@ -29,7 +30,12 @@ export type SyncResult = {
   posted: { id: string; slug: string; title: string }[]
   skipped: number
   baseline: number
+  /** Số video mới đưa vào hàng chờ ở lần chạy này */
+  queued?: number
+  /** Số video còn trong hàng chờ */
   pending: number
+  /** Giờ đăng tiếp theo (UTC, dạng YYYY-MM-DD HH:MM:SS) */
+  next?: string
   error?: string
 }
 
@@ -143,17 +149,13 @@ export async function runYoutubeSync(env: Env, opts: { force?: boolean } = {}): 
     const placeholders = videos.map(() => '?').join(',')
     const known = new Map(
       (
-        await env.DB.prepare(
-          `SELECT video_id, CASE WHEN status = 'processing' AND updated_at < datetime('now', '-10 minutes') THEN 'stuck' ELSE status END AS status
-           FROM youtube_videos WHERE video_id IN (${placeholders})`
-        )
+        await env.DB.prepare(`SELECT video_id, status FROM youtube_videos WHERE video_id IN (${placeholders})`)
           .bind(...videos.map((v) => v.id))
           .all<{ video_id: string; status: string }>()
       ).results.map((r) => [r.video_id, r.status])
     )
-    // Video chưa có bài: chưa từng thấy, chỉ mới được ghi nhận "có sẵn", hoặc bị kẹt "đang xử lý" quá 10 phút.
-    // Giữ thứ tự của YouTube (mới nhất trước) → mỗi giờ đăng video mới nhất.
-    const fresh = videos.filter((v) => !known.has(v.id) || ['baseline', 'stuck'].includes(known.get(v.id)!))
+    // Video chưa có bài: chưa từng thấy, hoặc chỉ mới được ghi nhận "có sẵn"
+    const fresh = videos.filter((v) => !known.has(v.id) || known.get(v.id) === 'baseline')
 
     // Lần chạy đầu: chỉ ghi nhận các video đang có, không đăng hàng loạt
     if (!(await getSetting(env.DB, 'yt.baseline_done'))) {
@@ -169,41 +171,88 @@ export async function runYoutubeSync(env: Env, opts: { force?: boolean } = {}): 
       return result
     }
 
-    let done = 0
-    for (const v of fresh) {
-      // Video kẹt đã được chọn đăng từ trước (kể cả bấm tay) → không lọc lại theo tiêu đề
-      if (known.get(v.id) !== 'stuck' && isCompilationTitle(v.title)) {
-        await env.DB.prepare(
-          `INSERT INTO youtube_videos (video_id, title, status, note) VALUES (?, ?, 'skipped', 'Tiêu đề chỉ là ngày tháng (bản tổng hợp)')
-           ON CONFLICT(video_id) DO UPDATE SET status = 'skipped', note = excluded.note, updated_at = datetime('now') WHERE status = 'baseline'`
-        )
-          .bind(v.id, v.title)
-          .run()
-        result.skipped++
-        continue
-      }
-      if (done >= MAX_PER_RUN) {
-        result.pending++
-        continue
-      }
+    // 1. Video mới: bản tổng hợp → bỏ qua, còn lại → hàng chờ. YouTube trả mới nhất trước,
+    //    nên đảo lại để video cũ hơn được đăng trước (bài mới nhất luôn nằm trên cùng).
+    const writes: D1PreparedStatement[] = []
+    for (const v of [...fresh].reverse()) {
+      const skip = isCompilationTitle(v.title)
+      writes.push(
+        env.DB.prepare(
+          `INSERT INTO youtube_videos (video_id, title, status, note) VALUES (?, ?, ?, ?)
+           ON CONFLICT(video_id) DO UPDATE SET status = excluded.status, note = excluded.note, updated_at = datetime('now') WHERE status = 'baseline'`
+        ).bind(v.id, v.title, skip ? 'skipped' : 'queued', skip ? 'Tiêu đề chỉ là ngày tháng (bản tổng hợp)' : '')
+      )
+      if (skip) result.skipped++
+      else result.queued = (result.queued ?? 0) + 1
+    }
+    // 2. Video kẹt "đang xử lý" quá 10 phút (lần chạy trước bị dừng giữa chừng) → về lại hàng chờ
+    writes.push(
+      env.DB.prepare(
+        "UPDATE youtube_videos SET status = 'queued', updated_at = datetime('now') WHERE status = 'processing' AND updated_at < datetime('now', '-10 minutes')"
+      )
+    )
+    await env.DB.batch(writes)
+
+    // 3. Xếp giờ đăng cho video chờ chưa có lịch
+    await scheduleQueued(env.DB)
+
+    // 4. Đăng video đã đến giờ (mỗi lần chạy tối đa 1 bài)
+    const due = await env.DB.prepare(
+      "SELECT video_id, title FROM youtube_videos WHERE status = 'queued' AND scheduled_at <= datetime('now') ORDER BY scheduled_at, rowid LIMIT 1"
+    ).first<{ video_id: string; title: string }>()
+    if (due) {
       // Giành video trước khi làm, tránh hai lần chạy cùng lúc đăng trùng
       const claim = await env.DB.prepare(
-        `INSERT INTO youtube_videos (video_id, title, status) VALUES (?, ?, 'processing')
-         ON CONFLICT(video_id) DO UPDATE SET status = 'processing', updated_at = datetime('now')
-           WHERE status = 'baseline' OR (status = 'processing' AND updated_at < datetime('now', '-10 minutes'))`
+        "UPDATE youtube_videos SET status = 'processing', updated_at = datetime('now') WHERE video_id = ? AND status = 'queued'"
       )
-        .bind(v.id, v.title)
+        .bind(due.video_id)
         .run()
-      if (!claim.meta.changes) continue
-      const post = await processClaimed(env, v)
-      result.posted.push({ id: v.id, slug: post.slug, title: post.title })
-      done++
+      if (claim.meta.changes) {
+        const post = await processClaimed(env, { id: due.video_id, title: due.title })
+        result.posted.push({ id: due.video_id, slug: post.slug, title: post.title })
+      }
     }
+
+    const queue = await env.DB.prepare(
+      "SELECT COUNT(*) AS n, MIN(scheduled_at) AS next FROM youtube_videos WHERE status = 'queued'"
+    ).first<{ n: number; next: string | null }>()
+    result.pending = queue?.n ?? 0
+    if (queue?.next) result.next = queue.next
   } catch (err) {
     result.error = String(err instanceof Error ? err.message : err).slice(0, 300)
   }
   await setSettings(env.DB, { 'yt.last_run': JSON.stringify(result) })
   return result
+}
+
+// Giờ dạng SQLite (UTC): "YYYY-MM-DD HH:MM:SS"
+const toSql = (d: Date) => d.toISOString().slice(0, 19).replace('T', ' ')
+const fromSql = (s: string) => new Date(`${s.replace(' ', 'T')}Z`)
+const floorHour = (d: Date) => new Date(Math.floor(d.getTime() / 3_600_000) * 3_600_000)
+
+/**
+ * Xếp giờ đăng cho các video trong hàng chờ chưa có lịch: tròn giờ (khớp cron chạy đầu mỗi giờ),
+ * cách bài gần nhất (đã đăng hoặc đã xếp lịch) ít nhất GAP_HOURS tiếng.
+ */
+async function scheduleQueued(db: D1Database) {
+  const { results } = await db
+    .prepare("SELECT video_id FROM youtube_videos WHERE status = 'queued' AND scheduled_at IS NULL ORDER BY created_at, rowid")
+    .all<{ video_id: string }>()
+  if (!results.length) return
+  const last = await db
+    .prepare(
+      `SELECT MAX(CASE WHEN status = 'queued' THEN scheduled_at ELSE updated_at END) AS t
+       FROM youtube_videos WHERE status = 'posted' OR (status = 'queued' AND scheduled_at IS NOT NULL)`
+    )
+    .first<{ t: string | null }>()
+  const gap = GAP_HOURS * 3_600_000
+  let slot = floorHour(new Date()).getTime()
+  if (last?.t) slot = Math.max(slot, floorHour(fromSql(last.t)).getTime() + gap)
+  await db.batch(
+    results.map((r, i) =>
+      db.prepare('UPDATE youtube_videos SET scheduled_at = ? WHERE video_id = ?').bind(toSql(new Date(slot + i * gap)), r.video_id)
+    )
+  )
 }
 
 /** Đăng thủ công một video đã bị bỏ qua / lỗi (từ trang quản trị) */
