@@ -449,7 +449,7 @@ section { margin-top: 64px; }
 .btn.btn-small { padding: 3px 10px; font-size: 0.82rem; }
 
 /* ===== Giao diện máy tính: khung rộng hơn, logo + menu cùng hàng, nội dung + cột bên phải ===== */
-.container { max-width: 1240px; padding: 0 24px; }
+.container { max-width: 1600px; padding: 0 clamp(16px, 3vw, 56px); }
 .main-col { min-width: 0; }
 .with-sidebar { display: grid; grid-template-columns: minmax(0, 1fr); gap: 40px; }
 .sidebar { display: grid; gap: 20px; align-content: start; }
@@ -468,10 +468,10 @@ section { margin-top: 64px; }
 .sidebar .post-list-compact img, .sidebar .thumb-placeholder { width: 76px; height: 57px; border-radius: 4px; }
 .sidebar .post-list-compact strong { font-size: 0.86rem; font-weight: 500; line-height: 1.55; }
 .main-col .post-grid { grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); }
-@media (max-width: 760px) { .container { padding: 0 16px; } }
 @media (min-width: 1024px) {
   .site-header .container { flex-wrap: nowrap; min-height: 76px; }
-  .with-sidebar { grid-template-columns: minmax(0, 1fr) 320px; gap: 48px; }
+  .with-sidebar { grid-template-columns: minmax(0, 1fr) 340px; gap: 56px; }
+  .main-col .post-grid { grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 24px; }
   .main-col .prose { max-width: none; }
   .hero { gap: 72px; padding: 56px 0 32px; }
   .topic-columns { gap: 40px; }
