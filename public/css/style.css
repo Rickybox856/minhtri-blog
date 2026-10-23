@@ -449,7 +449,7 @@ section { margin-top: 64px; }
 .btn.btn-small { padding: 3px 10px; font-size: 0.82rem; }
 
 /* ===== Giao diện máy tính: khung rộng hơn, logo + menu cùng hàng, nội dung + cột bên phải ===== */
-.container { max-width: 1600px; padding: 0 clamp(16px, 3vw, 56px); }
+.container { max-width: none; padding: 0 clamp(16px, 3vw, 64px); }
 .main-col { min-width: 0; }
 .with-sidebar { display: grid; grid-template-columns: minmax(0, 1fr); gap: 40px; }
 .sidebar { display: grid; gap: 20px; align-content: start; }
@@ -478,3 +478,4 @@ section { margin-top: 64px; }
   .footer-grid { gap: 32px 64px; }
   .footer-grid > div:first-child { max-width: 640px; }
 }
+@media (min-width: 1600px) { .with-sidebar { grid-template-columns: minmax(0, 1fr) 380px; gap: 64px; } }
