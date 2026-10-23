@@ -45,7 +45,7 @@ const Field = (p: { label: string; name: string; type?: string; value?: string; 
 const SignupForm = (p: { next: string; error?: string; email?: string; name?: string }) => (
   <section class="login-box member-box">
     <h1>無料会員登録</h1>
-    <p class="lead">登録すると、テレフォン人生相談の音声・動画をすべてお楽しみいただけます。登録は無料です。</p>
+    <p class="lead">登録すると、テレフォン人生相談の音声をすべてお楽しみいただけます。登録は無料です。</p>
     {p.error && <p class="notice error">{p.error}</p>}
     <form method="post" action={`${BASE}/dang-ky`} class="form">
       <input type="hidden" name="next" value={p.next} />
@@ -175,7 +175,7 @@ const MyPage = (p: {
   <section class="login-box member-box">
     <h1>マイページ</h1>
     <p>
-      {p.name ? `${p.name} さん、` : ''}ようこそ。会員として、すべての音声・動画をお楽しみいただけます。
+      {p.name ? `${p.name} さん、` : ''}ようこそ。会員として、すべての音声をお楽しみいただけます。
     </p>
     <p class="muted">登録メールアドレス: {p.email}</p>
     <p class="member-links">

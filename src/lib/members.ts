@@ -75,23 +75,15 @@ const AUDIO_EXT = /\.(mp3|m4a|aac|wav|ogg|oga|opus|flac)$/i
 /** File âm thanh trong kho media chỉ dành cho thành viên */
 export const isMemberOnlyMedia = (key: string) => AUDIO_EXT.test(key)
 
-/** Bài có trình phát âm thanh/video cần khoá hay không */
-export const hasMemberMedia = (html: string) => /class="(audio-player|video-embed)"/.test(html)
+/** Bài có trình phát âm thanh cần khoá hay không (video thì ai cũng xem được) */
+export const hasMemberMedia = (html: string) => /class="audio-player"/.test(html)
 
-const lockBox = (kind: '音声' | '動画', next: string) => {
+const lockBox = (kind: '音声', next: string) => {
   const q = `?next=${encodeURIComponent(next)}`
-  return `<div class="member-lock"><p class="member-lock-title">🔒 この${kind}は会員限定です</p><p>無料の会員登録（メールアドレスとパスワードだけ）で、すべての音声・動画をお楽しみいただけます。</p><p class="member-lock-actions"><a class="btn" href="/thanh-vien/dang-ky${q}">無料で会員登録</a><a class="btn btn-outline" href="/thanh-vien/dang-nhap${q}">ログイン</a></p></div>`
+  return `<div class="member-lock"><p class="member-lock-title">🔒 この${kind}は会員限定です</p><p>無料の会員登録（メールアドレスとパスワードだけ）で、すべての音声をお楽しみいただけます。</p><p class="member-lock-actions"><a class="btn" href="/thanh-vien/dang-ky${q}">無料で会員登録</a><a class="btn btn-outline" href="/thanh-vien/dang-nhap${q}">ログイン</a></p></div>`
 }
 
-/** Thay trình phát và link YouTube bằng khung mời đăng nhập */
+/** Thay trình phát âm thanh bằng khung mời đăng nhập */
 export function lockMemberMedia(html: string, next: string) {
-  const login = `/thanh-vien/dang-nhap?next=${encodeURIComponent(next)}`
-  return html
-    .replace(/<div class="audio-player">[\s\S]*?<\/audio><\/div>/g, () => lockBox('音声', next))
-    .replace(/<div class="video-embed">[\s\S]*?<\/iframe><\/div>/g, () => lockBox('動画', next))
-    .replace(/<p class="video-cta">[\s\S]*?<\/p>/g, '')
-    .replace(
-      /<a href="https:\/\/(?:www\.)?(?:youtube\.com\/watch|youtu\.be\/)[^"]*"[^>]*>[\s\S]*?<\/a>/g,
-      `<a href="${login}">🔒 ログインして動画を見る</a>`
-    )
+  return html.replace(/<div class="audio-player">[\s\S]*?<\/audio><\/div>/g, () => lockBox('音声', next))
 }
