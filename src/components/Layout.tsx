@@ -99,7 +99,15 @@ export const Layout = (props: Props) => {
         <link rel="stylesheet" href={`/css/style.css?v=${props.assetVersion}`} />
         {(props.jsonLd ?? []).map(jsonScript)}
       </head>
-      <body>
+      <body class={isAdmin ? undefined : 'site-public'}>
+        {/* Cánh hoa anh đào rơi (chỉ trang công khai, tắt khi người dùng chọn giảm chuyển động) */}
+        {!isAdmin && (
+          <div class="sakura-fall" aria-hidden="true">
+            {Array.from({ length: 14 }, () => (
+              <i />
+            ))}
+          </div>
+        )}
         <header class="site-header">
           <div class="container">
             <a href="/" class="logo">

@@ -483,3 +483,63 @@ section { margin-top: 64px; }
   .hero-image img { aspect-ratio: 16 / 9; }
   .featured-image { aspect-ratio: 16 / 9; max-height: 480px; }
 }
+
+/* ===== Trang trí Nhật Bản: hoa anh đào, sóng 青海波 (seigaiha) — chỉ trang công khai ===== */
+:root { --sakura: #f4b6c6; --sakura-deep: #d9668a; }
+body.site-public {
+  background:
+    radial-gradient(1100px 600px at 100% 0, rgba(246, 188, 203, 0.30), transparent 62%),
+    radial-gradient(900px 520px at 0 100%, rgba(246, 188, 203, 0.20), transparent 60%),
+    var(--bg);
+  background-attachment: fixed;
+}
+.site-public .site-header::after { content: ""; position: absolute; left: 0; right: 0; bottom: -1px; height: 3px; background: linear-gradient(90deg, transparent, var(--sakura) 20%, var(--sakura-deep) 50%, var(--sakura) 80%, transparent); opacity: 0.55; }
+
+/* Cành hoa ở đầu trang chủ + bông hoa ở góc ảnh */
+.site-public .hero { position: relative; padding-top: calc(min(46vw, 560px) * 0.42); }
+.site-public .hero::before { content: ""; position: absolute; top: -20px; left: calc(-1 * clamp(16px, 3vw, 64px)); width: min(46vw, 560px); aspect-ratio: 620 / 280; background: url(/img/sakura-branch.svg) no-repeat left top / contain; pointer-events: none; }
+.site-public .hero > * { position: relative; }
+.site-public .hero-image::after { content: ""; position: absolute; right: -14px; bottom: -30px; width: clamp(64px, 8vw, 120px); aspect-ratio: 1; background: url(/img/sakura-flower.svg) no-repeat center / contain; filter: drop-shadow(0 6px 10px rgba(217, 102, 138, 0.25)); pointer-events: none; }
+
+/* Biểu tượng hoa cạnh tiêu đề mục */
+.site-public .section-head h2::before, .site-public .related > h2::before, .site-public .side-box h2::before { content: ""; display: inline-block; width: 1.05em; height: 1.05em; margin-right: 0.45em; vertical-align: -0.14em; background: url(/img/sakura-flower.svg) no-repeat center / contain; }
+.site-public .main-col > h1 { position: relative; padding-bottom: 14px; border-bottom: 1px solid var(--border); }
+.site-public .main-col > h1::after { content: ""; position: absolute; right: 0; bottom: 6px; width: min(40%, 260px); aspect-ratio: 620 / 280; background: url(/img/sakura-branch.svg) no-repeat right bottom / contain; opacity: 0.85; pointer-events: none; }
+
+/* Thẻ bài, khung bên phải */
+.site-public .post-card:hover, .site-public .featured-post:hover { border-color: #f1c4d0; }
+.site-public .topic-column, .site-public .side-box { position: relative; overflow: hidden; }
+.site-public .side-member { border-top-color: var(--sakura-deep); background: linear-gradient(160deg, #fff5f8, #fff 55%); }
+.site-public .side-member::after { content: ""; position: absolute; right: -22px; top: -22px; width: 96px; aspect-ratio: 1; background: url(/img/sakura-flower.svg) no-repeat center / contain; opacity: 0.45; pointer-events: none; }
+.site-public .topic-column::after { content: ""; position: absolute; right: -28px; bottom: -28px; width: 110px; aspect-ratio: 1; background: url(/img/sakura-flower.svg) no-repeat center / contain; opacity: 0.18; pointer-events: none; }
+
+/* Chân trang: hoa văn sóng seigaiha trên nền chàm */
+.site-public .site-footer { background-color: var(--honey-dark); background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='20' viewBox='0 0 40 20'%3E%3Cdefs%3E%3Cg id='s'%3E%3Ccircle r='20' fill='%231f2a52'/%3E%3Cg fill='none' stroke='%23ffffff' stroke-opacity='.09'%3E%3Ccircle r='19'/%3E%3Ccircle r='15'/%3E%3Ccircle r='11'/%3E%3Ccircle r='7'/%3E%3Ccircle r='3'/%3E%3C/g%3E%3C/g%3E%3C/defs%3E%3Cuse href='%23s' x='0' y='0'/%3E%3Cuse href='%23s' x='40' y='0'/%3E%3Cuse href='%23s' x='20' y='10'/%3E%3Cuse href='%23s' x='0' y='20'/%3E%3Cuse href='%23s' x='40' y='20'/%3E%3C/svg%3E"); background-size: 56px 28px; position: relative; }
+.site-public .site-footer::before { content: ""; position: absolute; left: 0; right: 0; top: 0; height: 3px; background: linear-gradient(90deg, var(--sakura-deep), var(--sakura), var(--sakura-deep)); opacity: 0.8; }
+
+/* Cánh hoa rơi */
+.sakura-fall { position: fixed; inset: 0; z-index: 9; overflow: hidden; pointer-events: none; }
+.sakura-fall i { position: absolute; top: -40px; background: url(/img/sakura-petal.svg) no-repeat center / contain; opacity: 0.75; animation-name: sakura-fall; animation-timing-function: linear; animation-iteration-count: infinite; will-change: transform; }
+@keyframes sakura-fall {
+  0% { transform: translate(0, 0) rotate(0deg); }
+  25% { transform: translate(var(--dx), 28vh) rotate(90deg); }
+  50% { transform: translate(0, 56vh) rotate(200deg); }
+  75% { transform: translate(var(--dx), 84vh) rotate(290deg); }
+  100% { transform: translate(0, 112vh) rotate(380deg); }
+}
+.sakura-fall i:nth-child(1) { left: 1.6%; width: 12px; height: 15px; animation-duration: 17.3s; animation-delay: -0.8s; --dx: -86px; }
+.sakura-fall i:nth-child(2) { left: 10.0%; width: 16px; height: 20px; animation-duration: 15.4s; animation-delay: -1.3s; --dx: 48px; }
+.sakura-fall i:nth-child(3) { left: 15.4%; width: 16px; height: 20px; animation-duration: 17.7s; animation-delay: -14.6s; --dx: -68px; }
+.sakura-fall i:nth-child(4) { left: 24.5%; width: 16px; height: 20px; animation-duration: 23.4s; animation-delay: -13.5s; --dx: 46px; }
+.sakura-fall i:nth-child(5) { left: 33.3%; width: 10px; height: 12px; animation-duration: 19.1s; animation-delay: -2.5s; --dx: 58px; }
+.sakura-fall i:nth-child(6) { left: 38.2%; width: 16px; height: 20px; animation-duration: 16.4s; animation-delay: -13.4s; --dx: -53px; }
+.sakura-fall i:nth-child(7) { left: 45.5%; width: 18px; height: 22px; animation-duration: 15.1s; animation-delay: -1.5s; --dx: -112px; }
+.sakura-fall i:nth-child(8) { left: 50.0%; width: 12px; height: 15px; animation-duration: 18.5s; animation-delay: -9.8s; --dx: 99px; }
+.sakura-fall i:nth-child(9) { left: 59.7%; width: 14px; height: 18px; animation-duration: 17.0s; animation-delay: -4.2s; --dx: -71px; }
+.sakura-fall i:nth-child(10) { left: 64.3%; width: 13px; height: 16px; animation-duration: 18.8s; animation-delay: -16.5s; --dx: 76px; }
+.sakura-fall i:nth-child(11) { left: 74.0%; width: 10px; height: 12px; animation-duration: 14.3s; animation-delay: -6.0s; --dx: 59px; }
+.sakura-fall i:nth-child(12) { left: 82.8%; width: 14px; height: 18px; animation-duration: 13.4s; animation-delay: -9.0s; --dx: 83px; }
+.sakura-fall i:nth-child(13) { left: 88.7%; width: 16px; height: 20px; animation-duration: 18.5s; animation-delay: -14.7s; --dx: -51px; }
+.sakura-fall i:nth-child(14) { left: 97.0%; width: 14px; height: 18px; animation-duration: 20.7s; animation-delay: -1.3s; --dx: 113px; }
+@media (max-width: 760px) { .sakura-fall i:nth-child(n + 8) { display: none; } }
+@media (prefers-reduced-motion: reduce) { .sakura-fall { display: none; } }

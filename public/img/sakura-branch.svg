@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 620 280">
+<defs><radialGradient id="g" cx="0" cy="0" r="30" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#e98aa2"/><stop offset=".45" stop-color="#f6bccb"/><stop offset="1" stop-color="#fde6ec"/></radialGradient>
+<path id="p" d="M0 0C-10-6-13-21-6-29L0-25L6-29C13-21 10-6 0 0Z" fill="url(#g)" stroke="#eba3b5" stroke-width=".8"/>
+<g id="f"><use xlink:href="#p"/><use xlink:href="#p" transform="rotate(72)"/><use xlink:href="#p" transform="rotate(144)"/><use xlink:href="#p" transform="rotate(216)"/><use xlink:href="#p" transform="rotate(288)"/><path d="M0 0L0-11M0 0L10-3M0 0L6 9M0 0L-6 9M0 0L-10-3" stroke="#d9668a" stroke-width="1" stroke-linecap="round"/><g fill="#c94a72"><circle cy="-11" r="1.6"/><circle cx="10" cy="-3" r="1.6"/><circle cx="6" cy="9" r="1.6"/><circle cx="-6" cy="9" r="1.6"/><circle cx="-10" cy="-3" r="1.6"/></g><circle r="3" fill="#f7d36b"/></g></defs>
+<g fill="none" stroke="#5b3a2e" stroke-linecap="round">
+<path d="M-10 10C80 30 160 80 250 100S420 150 610 170" stroke-width="9"/>
+<path d="M150 70C170 40 200 28 230 22" stroke-width="5"/>
+<path d="M250 100C280 70 300 48 312 26" stroke-width="4"/>
+<path d="M330 120C360 160 365 185 372 205" stroke-width="4"/>
+<path d="M430 140C440 110 445 80 440 56" stroke-width="4"/>
+<path d="M470 155C490 180 500 200 508 222" stroke-width="3.5"/>
+<path d="M200 92C215 120 225 140 230 158" stroke-width="3.5"/>
+</g>
+<g fill="#8bb174"><ellipse cx="606" cy="166" rx="6" ry="9" transform="rotate(70 606 166)"/>
+<ellipse cx="80" cy="30" rx="6" ry="9" transform="rotate(20 80 30)"/>
+<ellipse cx="212" cy="30" rx="6" ry="9" transform="rotate(20 212 30)"/>
+<ellipse cx="440" cy="60" rx="6" ry="9" transform="rotate(20 440 60)"/>
+</g><g fill="#ee9fb4"><ellipse cx="610" cy="163" rx="4.5" ry="6" transform="rotate(70 606 166)"/>
+<ellipse cx="80" cy="26" rx="4.5" ry="6" transform="rotate(20 80 30)"/>
+<ellipse cx="212" cy="26" rx="4.5" ry="6" transform="rotate(20 212 30)"/>
+<ellipse cx="440" cy="56" rx="4.5" ry="6" transform="rotate(20 440 60)"/>
+</g>
+<use xlink:href="#f" transform="translate(118 52) rotate(10) scale(1.15)"/>
+<use xlink:href="#f" transform="translate(190 96) rotate(40) scale(1.0)"/>
+<use xlink:href="#f" transform="translate(262 60) rotate(-15) scale(0.85)"/>
+<use xlink:href="#f" transform="translate(330 128) rotate(25) scale(1.1)"/>
+<use xlink:href="#f" transform="translate(410 92) rotate(60) scale(0.9)"/>
+<use xlink:href="#f" transform="translate(470 160) rotate(5) scale(1.0)"/>
+<use xlink:href="#f" transform="translate(540 118) rotate(30) scale(0.75)"/>
+<use xlink:href="#f" transform="translate(228 150) rotate(-30) scale(0.8)"/>
+<use xlink:href="#f" transform="translate(372 196) rotate(15) scale(0.7)"/>
+<use xlink:href="#f" transform="translate(150 128) rotate(50) scale(0.7)"/>
+<use xlink:href="#f" transform="translate(505 212) rotate(-20) scale(0.6)"/>
+<use xlink:href="#f" transform="translate(300 30) rotate(10) scale(0.6)"/>
+</svg>
