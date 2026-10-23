@@ -3,6 +3,7 @@ import { raw } from 'hono/html'
 import { marked } from 'marked'
 import { PostGrid, ProductGrid } from '../components/Cards'
 import type { Context } from 'hono'
+import { WithSidebar, sidebarData } from '../components/Sidebar'
 import { PER_PAGE, Pagination, pageHref, parsePage } from '../components/Pagination'
 import { getPost, listPostProducts, listPosts, listPostsPage } from '../lib/db'
 import { hasMemberMedia, lockMemberMedia } from '../lib/members'
@@ -20,19 +21,19 @@ async function postIndex(c: Context<AppEnv>) {
   if (page === null) return c.notFound()
   if (page === 1 && c.req.param('n')) return c.redirect(base, 301)
 
-  const { posts, total } = await listPostsPage(c.env.DB, page, PER_PAGE)
+  const [{ posts, total }, side] = await Promise.all([listPostsPage(c.env.DB, page, PER_PAGE), sidebarData(c)])
   if (!posts.length && page > 1) return c.notFound()
 
   const suffix = page > 1 ? `（${page}ページ目）` : ''
   return c.render(
-    <>
+    <WithSidebar c={c} data={side}>
       <h1>
         記事一覧
         {suffix && <small class="pg-title">{suffix}</small>}
       </h1>
       <PostGrid posts={posts} />
       <Pagination base={base} page={page} total={total} />
-    </>,
+    </WithSidebar>,
     {
       title: '記事一覧' + suffix,
       description: `${c.get('site').name}の記事一覧です。`,
@@ -52,9 +53,10 @@ app.get('/:slug', async (c) => {
   const post = await getPost(c.env.DB, c.req.param('slug'))
   if (!post) return c.notFound()
 
-  const [related, products] = await Promise.all([
+  const [related, products, side] = await Promise.all([
     listPosts(c.env.DB, 4, post.category),
     productsEnabled(c.get('site')) ? listPostProducts(c.env.DB, post) : [],
+    sidebarData(c),
   ])
 
   // Nội dung do quản trị viên viết nên được tin cậy; nếu sau này cho người dùng
@@ -72,7 +74,7 @@ app.get('/:slug', async (c) => {
   if (!c.get('member') && hasMemberMedia(html)) html = lockMemberMedia(html, `/bai-viet/${post.slug}`)
 
   return c.render(
-    <>
+    <WithSidebar c={c} data={side} currentCategory={post.category}>
       <article class="post">
         <header class="post-header">
           <h1>{post.title}</h1>
@@ -100,7 +102,7 @@ app.get('/:slug', async (c) => {
           <PostGrid posts={related.filter((p) => p.slug !== post.slug).slice(0, 3)} />
         </section>
       )}
-    </>,
+    </WithSidebar>,
     {
       title: post.title,
       description: post.excerpt,

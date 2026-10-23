@@ -447,3 +447,34 @@ section { margin-top: 64px; }
 .yt-auto-plan { padding: 14px 18px; margin: 12px 0 20px; display: grid; gap: 10px; }
 .yt-auto-plan h3 { margin: 0; font-size: 1.05rem; }
 .btn.btn-small { padding: 3px 10px; font-size: 0.82rem; }
+
+/* ===== Giao diện máy tính: khung rộng hơn, logo + menu cùng hàng, nội dung + cột bên phải ===== */
+.container { max-width: 1240px; padding: 0 24px; }
+.main-col { min-width: 0; }
+.with-sidebar { display: grid; grid-template-columns: minmax(0, 1fr); gap: 40px; }
+.sidebar { display: grid; gap: 20px; align-content: start; }
+.side-box { background: var(--card); border: 1px solid var(--border); border-radius: 4px; padding: 18px 20px; }
+.side-box h2 { margin: 0 0 12px; padding-bottom: 10px; border-bottom: 1px solid var(--border); font-size: 1.05rem; }
+.side-box p { margin: 0 0 14px; color: var(--muted); font-size: 0.9rem; line-height: 1.8; }
+.side-box .btn { display: block; }
+.side-member { border-top: 3px solid var(--honey); }
+.side-login { display: block; margin-top: 10px; text-align: center; font-size: 0.88rem; }
+.side-cats { list-style: none; margin: 0; padding: 0; }
+.side-cats a { display: flex; justify-content: space-between; padding: 8px 4px; border-bottom: 1px dashed var(--border); color: var(--text); text-decoration: none; }
+.side-cats li:last-child a { border-bottom: 0; }
+.side-cats a::after { content: "›"; color: var(--muted); }
+.side-cats a:hover, .side-cats a.active { color: var(--honey); }
+.sidebar .post-list-compact a { padding: 10px 0; gap: 12px; }
+.sidebar .post-list-compact img, .sidebar .thumb-placeholder { width: 76px; height: 57px; border-radius: 4px; }
+.sidebar .post-list-compact strong { font-size: 0.86rem; font-weight: 500; line-height: 1.55; }
+.main-col .post-grid { grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); }
+@media (max-width: 760px) { .container { padding: 0 16px; } }
+@media (min-width: 1024px) {
+  .site-header .container { flex-wrap: nowrap; min-height: 76px; }
+  .with-sidebar { grid-template-columns: minmax(0, 1fr) 320px; gap: 48px; }
+  .main-col .prose { max-width: none; }
+  .hero { gap: 72px; padding: 56px 0 32px; }
+  .topic-columns { gap: 40px; }
+  .footer-grid { gap: 32px 64px; }
+  .footer-grid > div:first-child { max-width: 640px; }
+}
