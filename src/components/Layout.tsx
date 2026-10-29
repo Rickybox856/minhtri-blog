@@ -82,6 +82,7 @@ export const Layout = (props: Props) => {
         {description && <meta name="description" content={description} />}
         {props.noindex && <meta name="robots" content="noindex" />}
         <link rel="canonical" href={canonical} />
+        {!isAdmin && <link rel="alternate" type="application/rss+xml" title={siteName} href="/feed.xml" />}
         <link rel="icon" href={icon} />
         <link rel="apple-touch-icon" href={icon} />
         <meta name="theme-color" content="#1f2a52" />

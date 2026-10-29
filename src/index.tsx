@@ -7,6 +7,8 @@ import { listBoards, listThreadsForSitemap } from './lib/forum'
 import { runYoutubeSync } from './lib/youtube-sync'
 import { runForumSchedule } from './lib/forum-schedule'
 import { runAutoSchedule } from './lib/yt-autoschedule'
+import { INDEXNOW_KEY, runIndexNow } from './lib/indexnow'
+import { getSiteConfig } from './lib/site-config'
 import type { GEnv } from './lib/google'
 import { mediaUrl } from './lib/format'
 import { loadMember } from './lib/members'
@@ -120,6 +122,48 @@ app.get('/sitemap.xml', async (c) => {
   return c.body(body, 200, { 'Content-Type': 'application/xml; charset=utf-8' })
 })
 
+// Khoá IndexNow (lib/indexnow.ts)
+app.get(`/${INDEXNOW_KEY}.txt`, (c) => c.text(INDEXNOW_KEY))
+
+const xmlEscape = (s: string) =>
+  s.replace(/[<>&'"]/g, (ch) => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;', "'": '&apos;', '"': '&quot;' })[ch]!)
+
+// RSS cho Feedly / trình đọc tin. Không ghi ngày đăng (site không hiện ngày ở trang công khai)
+app.get('/feed.xml', async (c) => {
+  const base = siteOrigin(c)
+  const [posts, site] = await Promise.all([listPosts(c.env.DB, 50), getSiteConfig(c.env.DB, c.env.SITE_NAME)])
+  const items = posts.map((p) => {
+    const link = `${base}/bai-viet/${p.slug}`
+    const image = p.cover_key ? new URL(mediaUrl(p.cover_key), base).toString() : ''
+    return [
+      '  <item>',
+      `    <title>${xmlEscape(p.title)}</title>`,
+      `    <link>${link}</link>`,
+      `    <guid isPermaLink="true">${link}</guid>`,
+      p.excerpt && `    <description>${xmlEscape(p.excerpt)}</description>`,
+      p.category_name && `    <category>${xmlEscape(p.category_name)}</category>`,
+      image && `    <media:thumbnail url="${xmlEscape(image)}" />`,
+      '  </item>',
+    ]
+      .filter(Boolean)
+      .join('\n')
+  })
+  const body = [
+    '<?xml version="1.0" encoding="UTF-8"?>',
+    '<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:media="http://search.yahoo.com/mrss/">',
+    '<channel>',
+    `  <title>${xmlEscape(site.name)}</title>`,
+    `  <link>${base}/</link>`,
+    `  <description>${xmlEscape(site.home_description)}</description>`,
+    '  <language>ja</language>',
+    `  <atom:link href="${base}/feed.xml" rel="self" type="application/rss+xml" />`,
+    ...items,
+    '</channel>',
+    '</rss>',
+  ].join('\n')
+  return c.body(body, 200, { 'Content-Type': 'application/rss+xml; charset=utf-8' })
+})
+
 app.use('*', loadNav, renderer)
 
 app.route('/', pages)
@@ -161,6 +205,9 @@ export default {
         await runForumSchedule(env)
           .then((r) => console.log('forum-schedule', JSON.stringify(r)))
           .catch((e) => console.error('forum-schedule', e))
+        await runIndexNow(env)
+          .then((r) => console.log('indexnow', JSON.stringify(r)))
+          .catch((e) => console.error('indexnow', e))
       })()
     )
   },
