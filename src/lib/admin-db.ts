@@ -4,12 +4,12 @@ import { POST_COLUMNS, PRODUCT_COLUMNS } from './db'
 
 // ---------- Bài viết ----------
 
-export type AdminPost = PostWithContent & { published: number }
+export type AdminPost = PostWithContent & { published: number; scheduled_at?: string | null }
 
 export async function adminListPosts(db: D1Database) {
   const { results } = await db
     .prepare(
-      `SELECT ${POST_COLUMNS}, p.published FROM posts p LEFT JOIN post_categories c ON c.slug = p.category
+      `SELECT ${POST_COLUMNS}, p.published, p.scheduled_at FROM posts p LEFT JOIN post_categories c ON c.slug = p.category
        ORDER BY p.published, COALESCE(p.published_at, p.created_at) DESC`
     )
     .all<AdminPost>()

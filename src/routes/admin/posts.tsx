@@ -199,7 +199,14 @@ app.get('/', async (c) => {
               </td>
               <td>{p.category_name ?? <span class="muted">{p.category} (không còn)</span>}</td>
               <td>
-                <Badge on={p.published} yes="Đã đăng" no="Nháp" />
+                {!p.published && p.scheduled_at ? (
+                  <>
+                    <span class="badge badge-off">Hẹn giờ</span>
+                    <div class="muted">{formatDate(p.scheduled_at)}</div>
+                  </>
+                ) : (
+                  <Badge on={p.published} yes="Đã đăng" no="Nháp" />
+                )}
               </td>
               <td>{formatDate(p.updated_at)}</td>
               <td class="row-actions">

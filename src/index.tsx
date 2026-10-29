@@ -8,6 +8,7 @@ import { runYoutubeSync } from './lib/youtube-sync'
 import { runForumSchedule } from './lib/forum-schedule'
 import { runAutoSchedule } from './lib/yt-autoschedule'
 import { INDEXNOW_KEY, runIndexNow } from './lib/indexnow'
+import { runPostSchedule } from './lib/post-schedule'
 import { getSiteConfig } from './lib/site-config'
 import type { GEnv } from './lib/google'
 import { mediaUrl } from './lib/format'
@@ -205,6 +206,10 @@ export default {
         await runForumSchedule(env)
           .then((r) => console.log('forum-schedule', JSON.stringify(r)))
           .catch((e) => console.error('forum-schedule', e))
+        await runPostSchedule(env)
+          .then((r) => console.log('post-schedule', JSON.stringify(r)))
+          .catch((e) => console.error('post-schedule', e))
+        // Chạy sau cùng để báo luôn các bài vừa tự đăng ở trên
         await runIndexNow(env)
           .then((r) => console.log('indexnow', JSON.stringify(r)))
           .catch((e) => console.error('indexnow', e))
